@@ -1,0 +1,93 @@
+
+/**
+ * 
+ */
+
+#ifndef HYDROMETER_H
+#define HYDROMETER_H
+
+#include <SensorDevice.h>
+
+#define ANALOG_WATER  400
+#define ANALOG_AIR    900
+
+/** Leelanau Software Company namespace 
+*  
+*/
+namespace lsc {
+  
+class GetSoilMoisture : public UPnPService {
+  public:
+  GetSoilMoisture();
+  void handleRequest(WebContext* svr);  
+
+/**
+ *   Macros to define the following Runtime Type Info:
+ *     private: static const ClassType  _classType;             
+ *     public:  static const ClassType* classType();   
+ *     public:  virtual void*           as(const ClassType* t);
+ *     public:  virtual boolean         isClassType( const ClassType* t);
+ */
+    DEFINE_RTTI;
+    DERIVED_TYPE_CHECK(UPnPService);
+};
+
+class Hydrometer : public Sensor {
+  public:
+  Hydrometer();
+  Hydrometer(const char* type, const char* target);
+
+  float      soilMoisture();
+  float      soilMoisture( int ar );
+  int        pin();
+  int        water()       {return _water;}
+  void       water( int w) {_water = (((w>0)&(w<1000))?(w):(_water));}
+  int        air()         {return _air;}
+  void       air( int a)   {_air = (((a>0)&(a<1000))?(a):(_air));}  
+  void       pin(int p);
+  
+/**
+ *   Virtual Functions required for UPnPDevice
+ */
+  void       setup(WebContext* svr);
+  
+/**
+ *   Virtual Functions required by Sensor, using default configuration
+ */
+   void      content(char buffer[], int bufferSize);
+
+/** Configuration support.
+ *  
+ */
+   void      configForm(WebContext* svr);
+   void      setHydrometerConfiguration(WebContext* svr);
+   void      getHydrometerConfiguration(WebContext* svr);  
+   void      acquireWet(WebContext* svr);  
+   void      acquireDry(WebContext* svr);  
+ 
+/**
+ *   Macros to define the following Runtime Type Info:
+ *     private: static const ClassType  _classType;             
+ *     public:  static const ClassType* classType();   
+ *     public:  virtual void*           as(const ClassType* t);
+ *     public:  virtual boolean         isClassType( const ClassType* t);
+ */
+    DEFINE_RTTI;
+    DERIVED_TYPE_CHECK(Sensor);
+  
+  private:
+  GetSoilMoisture   _getSoilMoisture;
+  int               _pin = A0;
+  int               _air = ANALOG_AIR;
+  int               _water = ANALOG_WATER;
+  int               _acquireWet = -1;
+  int               _acquireDry = -1;
+
+  void  displayForm(WebContext* svr, int acquireDry, int acquireWet );
+  Hydrometer(const Hydrometer&)= delete;
+  Hydrometer& operator=(const Hydrometer&)= delete;
+};
+
+} // End of namespace lsc
+
+ #endif
