@@ -6,8 +6,8 @@
 #include <WiFiPortal.h>
 #include "Thermometer.h"
 #include "Hydrometer.h"
-#include "FanControl.h"
-#include "TimerControl.h"
+#include "HumidityFan.h"
+#include "OutletTimer.h"
 #include "SoftwareClock.h"
 #include "ExtendedDevice.h"
 
@@ -40,8 +40,8 @@ ExtendedDevice   root;
 SoftwareClock    sw_clock;
 Thermometer      t;
 Hydrometer       h;
-FanControl       f;
-TimerControl     o;
+HumidityFan      f;
+OutletTimer      o;
 const char*      hostname = "BigBang";
 
 
@@ -122,7 +122,7 @@ void setup() {
  *  Note that device target must be set prior to calling setup or adding to the 
  *  RootDevice.
  */
-  root.addDevices(&t,&h,&f,&o,&sw_clock);
+  root.addDevices(&f,&o,&t,&h,&sw_clock);
 
 /**
  *  
