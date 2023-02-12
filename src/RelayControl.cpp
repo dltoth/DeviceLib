@@ -19,7 +19,7 @@ const char relay_on[]   PROGMEM = "<div align=\"center\"><a href=\"./setState?ST
                                    "<span class=\"toggle-switch\"></span></a>&emsp;Relay ON</div>";
 
 /**
- * Manual Slider OFF
+ * Relay Slider OFF
  */
 const char relay_off[]  PROGMEM = "<div align=\"center\">&ensp;<a href=\"./setState?STATE=ON\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\">"
                                    "<span class=\"toggle-switch\"></span></a>&emsp;Relay OFF</div>";
@@ -60,14 +60,11 @@ void RelayControl::setState(WebContext* svr) {
           }
        }
    }
-   content(svr);
+   displayControl(svr);
 }
 
-void  RelayControl::content(WebContext* svr) {  
-  char buffer[1000];
-  int size = sizeof(buffer);
+void  RelayControl::content(char buffer[], int size) {  
   int pos = 0;
-  pos = formatBuffer_P(buffer,size,pos,html_header);
   if( loggingLevel(FINE) ) Serial.printf("RelayControl::content: Relay state is %s \n",controlState());
   if( isON() ) {
     pos = formatBuffer_P(buffer,size,pos,relay_on);  
@@ -77,9 +74,6 @@ void  RelayControl::content(WebContext* svr) {
     pos = formatBuffer_P(buffer,size,pos,relay_off); 
     pos = formatBuffer_P(buffer,size,pos,off_msg);          
   }         
-  pos = formatTail(buffer,size,pos); 
-  if( loggingLevel(FINE) ) Serial.printf("RelayControl::content: Sending %d bytes\n\n",pos);                             
-  svr->send(200,"text/html",buffer);
 }
 
 

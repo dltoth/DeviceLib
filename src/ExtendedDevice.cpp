@@ -96,8 +96,7 @@ void ExtendedDevice::displayRoot(WebContext* svr) {
  */
   int pos = formatHeader(buffer,size,getDisplayName());
 
-/** Add Content
- *  
+/** Add Content 
  */
   formatContent(buffer+pos,size-pos);
   pos = strlen(buffer);

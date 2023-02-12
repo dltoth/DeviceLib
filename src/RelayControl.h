@@ -15,14 +15,17 @@
 namespace lsc {
 
 /** RelayControl is a Control for managing a relay, which in turn could control an outlet. RelayControl has 2 states ON, and OFF controlled by a toggle 
- *  in the HTML interface. Switch ControlState is read from the relay itself rather than managing an internal variable.
- *  Implementers of this class must provide:
+ *  in the HTML interface. Relay ControlState is read from the relay itself rather than managing an internal variable.
+ *  RelayControl publishes a UPnPService for setting relay state (setState) as implemented by the member variable 
+ *      UPnPService    _setStateSvc;
+ *  Subclasses should provide:
  *      virtual void  content(WebContext* svr);    // From Control - displays the device based on RelayControl state
- *      virtual void  setState(WebContext* svr);   // HttpHandler for retrieving arguments and setting the RelayControl state
- *  The actual electronics for  ON/OFF are implemented in the method setOutletState(ControlState)
+ *      virtual void  setState(WebContext* svr);   // HttpHandler for the set state service that retrieves arguments 
+ *                                                    and sets RelayControl state
+ *  The actual electronics for  ON/OFF are implemented in the method setControlState(ControlState)
  *  RelayControl relay uses WeMOS pin D5 (GPIO pin 14), but pin can be set via:
  *      void setPin(int pin);
- *  Configuration support is provided by Control allowing  deviceName definition 
+ *  Configuration support is provided by Control allowing  deviceName definition
  */
 
 class RelayControl : public Control {
@@ -53,7 +56,7 @@ class RelayControl : public Control {
 /**
  *    Display this Control
  */
-      void             content(WebContext* svr);
+      void             content(char buffer[], int size);
       void             setup(WebContext* svr);
  
 /**
@@ -74,7 +77,7 @@ class RelayControl : public Control {
       DERIVED_TYPE_CHECK(Control);
 
       protected:
-      void                setControlState(ControlState flag);            
+      virtual void        setControlState(ControlState flag);            
       UPnPService         _setStateSvc;
 
 /**
