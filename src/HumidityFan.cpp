@@ -1,5 +1,23 @@
 /**
  * 
+ *  DeviceLib Library
+ *  Copyright (C) 2023  Daniel L Toth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or any 
+ *  later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *  
+ *  The author can be contacted at dan@leelanausoftware.com  
+ *
  */
 
 #include "HumidityFan.h"
@@ -35,8 +53,9 @@ const char HumidityFan_config_template[]  PROGMEM = "<?xml version=\"1.0\" encod
  *  Static RTT initialization
  */
 INITIALIZE_STATIC_TYPE(HumidityFan);
+INITIALIZE_UPnP_TYPE(HumidityFan,urn:LeelanauSoftware-com:device:HumidityFan:1);
 
-HumidityFan::HumidityFan() : SensorControlledRelay("urn:LeelanauSoftwareCo-com:device:HumidityFan:1","humidityFan") {
+HumidityFan::HumidityFan() : SensorControlledRelay("humidityFan") {
   setDisplayName("Humidity Fan");
   
 /**
@@ -47,7 +66,7 @@ HumidityFan::HumidityFan() : SensorControlledRelay("urn:LeelanauSoftwareCo-com:d
   getConfiguration()->setHttpHandler([this](WebContext* svr){this->getHumidityFanConfiguration(svr);});
 }
 
-HumidityFan::HumidityFan(const char* type, const char* target) : SensorControlledRelay(type, target) {
+HumidityFan::HumidityFan(const char* target) : SensorControlledRelay(target) {
   setDisplayName("Humidity Fan");
 
 /**

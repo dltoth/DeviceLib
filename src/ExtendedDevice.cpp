@@ -1,8 +1,25 @@
-
 /**
  * 
+ *  DeviceLib Library
+ *  Copyright (C) 2023  Daniel L Toth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or any 
+ *  later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *  
+ *  The author can be contacted at dan@leelanausoftware.com  
+ *
  */
- 
+
 #include <ssdp.h>
 #include <UPnPBuffer.h>
 #include "ExtendedDevice.h"
@@ -13,7 +30,7 @@ const char SSDP_Search[]                  PROGMEM = "M-SEARCH * HTTP/1.1\r\n"
                                                     "HOST: 239.255.255.250:1900\r\n"
                                                     "MAN: ssdp:discover\r\n"
                                                     "ST: upnp:rootdevice\r\n"
-                                                    "ST.LEELANAUSOFTWARECO.COM: \r\n"
+                                                    "ST.LEELANAUSOFTWARE.COM: \r\n"
                                                     "USER-AGENT: ESP8266 UPnP/1.1 LSC-SSDP/1.0\r\n\r\n";
 const char LocationHeader[]               PROGMEM = "LOCATION";
 const char nearby_title[]                 PROGMEM = "<H1 align=\"center\"> Devices Near %s </H1><br><br>";
@@ -39,16 +56,17 @@ const char brk_html[]                   PROGMEM = "<br>";
  */
  
 INITIALIZE_STATIC_TYPE(ExtendedDevice);
+INITIALIZE_UPnP_TYPE(ExtendedDevice,urn:LeelanauSoftware-com:device:ExtendedDevice:1);
 
-ExtendedDevice::ExtendedDevice() : RootDevice("urn:LeelanauSoftwareCo-com:device:ExtendedDevice:1","ExtendedDevice") {
+ExtendedDevice::ExtendedDevice() : RootDevice("root") {
   addServices(getConfiguration(),setConfiguration());   // Add services for configuration
-  setDisplayName("ExtendedDevice");
+  setDisplayName("Extended Device");
   setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
 }
 
-ExtendedDevice::ExtendedDevice(const char* type, const char* target) : RootDevice(type, target) {
+ExtendedDevice::ExtendedDevice(const char* target) : RootDevice(target) {
   addServices(getConfiguration(),setConfiguration());   // Add services for configuration
-  setDisplayName("ExtendedDevice");
+  setDisplayName("Extended Device");
   setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
 }
 

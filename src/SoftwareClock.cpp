@@ -1,5 +1,23 @@
 /**
  * 
+ *  DeviceLib Library
+ *  Copyright (C) 2023  Daniel L Toth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or any 
+ *  later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *  
+ *  The author can be contacted at dan@leelanausoftware.com  
+ *
  */
 
 #include "SoftwareClock.h"
@@ -51,9 +69,11 @@ const char  SoftwareClock_config_form[] PROGMEM = "<br><br><form action=\"%s\">"
  */
 INITIALIZE_STATIC_TYPE(GetDateTime);
 INITIALIZE_STATIC_TYPE(SoftwareClock);
+INITIALIZE_UPnP_TYPE(GetDateTime,urn:LeelanauSoftware-com:service:getDateTime:1);
+INITIALIZE_UPnP_TYPE(SoftwareClock,urn:LeelanauSoftware-com:device:SoftwareClock:1);
 NTPTime SoftwareClock::_ntp;
 
-GetDateTime::GetDateTime() : UPnPService("urn:LeelanauSoftwareCo-com:service:GetDateTime:1","getDateTime") {setDisplayName("Get Date/Time");};
+GetDateTime::GetDateTime() : UPnPService("getDateTime") {setDisplayName("Get Date/Time");};
 void GetDateTime::handleRequest(WebContext* svr) {
   SoftwareClock* c = (SoftwareClock*)GET_PARENT_AS(SoftwareClock::classType());
   char buffer[256];
@@ -71,7 +91,7 @@ void GetDateTime::handleRequest(WebContext* svr) {
   svr->send(result, "text/xml", buffer);  
 }
 
-SoftwareClock::SoftwareClock() : Sensor("urn:LeelanauSoftwareCo-com:device:SoftwareClock:1","clock") {
+SoftwareClock::SoftwareClock() : Sensor("clock") {
   addServices(&_getDateTime);
   setDisplayName("Software Clock");
   setConfiguration()->setHttpHandler([this](WebContext* svr){this->setClockConfiguration(svr);});
@@ -79,7 +99,7 @@ SoftwareClock::SoftwareClock() : Sensor("urn:LeelanauSoftwareCo-com:device:Softw
   getConfiguration()->setHttpHandler([this](WebContext* svr){this->getClockConfiguration(svr);});
 }
 
-SoftwareClock::SoftwareClock(const char* type, const char* target) : Sensor(type, target) {
+SoftwareClock::SoftwareClock(const char* target) : Sensor(target) {
   addServices(&_getDateTime);
   setDisplayName("Software Clock");
   setConfiguration()->setHttpHandler([this](WebContext* svr){this->setClockConfiguration(svr);});

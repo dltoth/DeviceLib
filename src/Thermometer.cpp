@@ -1,6 +1,23 @@
-
 /**
  * 
+ *  DeviceLib Library
+ *  Copyright (C) 2023  Daniel L Toth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or any 
+ *  later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *  
+ *  The author can be contacted at dan@leelanausoftware.com  
+ *
  */
 
 #include "Thermometer.h"
@@ -30,9 +47,11 @@ const char Thermometer_config_form[]      PROGMEM = "<form action=\"%s\"><div al
  *  Static RTT initialization
  */
 INITIALIZE_STATIC_TYPE(GetTempHum);
+INITIALIZE_UPnP_TYPE(GetTempHum,urn:LeelanauSoftware-com:service:getTempHum:1);
 INITIALIZE_STATIC_TYPE(Thermometer);
+INITIALIZE_UPnP_TYPE(Thermometer,urn:LeelanauSoftware-com:device:Thermometer:1);
 
-GetTempHum::GetTempHum() : UPnPService("urn:LeelanauSoftwareCo-com:service:GetTempHum:1","getTempHum") {setDisplayName("Get Temperature/Humidity");};
+GetTempHum::GetTempHum() : UPnPService("getTempHum") {setDisplayName("Get Temperature/Humidity");};
 void GetTempHum::handleRequest(WebContext* svr) {
   Thermometer* t = (Thermometer*)GET_PARENT_AS(Thermometer::classType());
   char buffer[256];
@@ -49,7 +68,7 @@ void GetTempHum::handleRequest(WebContext* svr) {
   svr->send(200,"text/xml",buffer); 
 }
 
-Thermometer::Thermometer() : Sensor("urn:LeelanauSoftwareCo-com:device:Thermometer:1","thermometer") {
+Thermometer::Thermometer() : Sensor("thermometer") {
   addServices(&_getTempHum);
   setDisplayName("Thermometer");
   setConfiguration()->setHttpHandler([this](WebContext* svr){this->setThermometerConfiguration(svr);});
@@ -57,7 +76,7 @@ Thermometer::Thermometer() : Sensor("urn:LeelanauSoftwareCo-com:device:Thermomet
   getConfiguration()->setHttpHandler([this](WebContext* svr){this->getThermometerConfiguration(svr);});
 }
 
-Thermometer::Thermometer(const char* type, const char* target) : Sensor(type, target) {
+Thermometer::Thermometer(const char* target) : Sensor(target) {
   addServices(&_getTempHum);
   setDisplayName("Thermometer");
   setConfiguration()->setHttpHandler([this](WebContext* svr){this->setThermometerConfiguration(svr);});

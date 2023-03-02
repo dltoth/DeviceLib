@@ -1,6 +1,23 @@
-
 /**
  * 
+ *  DeviceLib Library
+ *  Copyright (C) 2023  Daniel L Toth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or any 
+ *  later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *  
+ *  The author can be contacted at dan@leelanausoftware.com  
+ *
  */
 
 #include "Hydrometer.h"
@@ -39,8 +56,10 @@ const char Hydrometer_config_form[]      PROGMEM = "<form action=\"%s\">"       
  */
 INITIALIZE_STATIC_TYPE(GetSoilMoisture);
 INITIALIZE_STATIC_TYPE(Hydrometer);
+INITIALIZE_UPnP_TYPE(GetSoilMoisture,urn:LeelanauSoftware-com:service:getSoilMoisture:1);
+INITIALIZE_UPnP_TYPE(Hydrometer,urn:LeelanauSoftware-com:device:Hydrometer:1);
 
-GetSoilMoisture::GetSoilMoisture() : UPnPService("urn:LeelanauSoftwareCo-com:service:GetSoilMoisture:1","getSoilMoisture") {setDisplayName("Get Soil Moisture");};
+GetSoilMoisture::GetSoilMoisture() : UPnPService("getSoilMoisture") {setDisplayName("Get Soil Moisture");};
 void GetSoilMoisture::handleRequest(WebContext* svr) {
   Hydrometer* h = (Hydrometer*)GET_PARENT_AS(Hydrometer::classType());
   char buffer[256];
@@ -56,7 +75,7 @@ void GetSoilMoisture::handleRequest(WebContext* svr) {
   svr->send(200,"text/xml",buffer); 
 }
 
-Hydrometer::Hydrometer() : Sensor("urn:LeelanauSoftwareCo-com:device:Hydrometer:1","hydrometer") {
+Hydrometer::Hydrometer() : Sensor("hydrometer") {
   addServices(&_getSoilMoisture);
   setDisplayName("Hydrometer");
   setConfiguration()->setHttpHandler([this](WebContext* svr){this->setHydrometerConfiguration(svr);});
@@ -64,7 +83,7 @@ Hydrometer::Hydrometer() : Sensor("urn:LeelanauSoftwareCo-com:device:Hydrometer:
   getConfiguration()->setHttpHandler([this](WebContext* svr){this->getHydrometerConfiguration(svr);});
 }
 
-Hydrometer::Hydrometer(const char* type, const char* target) : Sensor(type, target) {
+Hydrometer::Hydrometer(const char* target) : Sensor(target) {
   addServices(&_getSoilMoisture);
   setDisplayName("Hydrometer");
   setConfiguration()->setHttpHandler([this](WebContext* svr){this->setHydrometerConfiguration(svr);});

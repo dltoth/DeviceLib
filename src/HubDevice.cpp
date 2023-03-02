@@ -1,5 +1,23 @@
 /**
  * 
+ *  DeviceLib Library
+ *  Copyright (C) 2023  Daniel L Toth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or any 
+ *  later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *  
+ *  The author can be contacted at dan@leelanausoftware.com  
+ *
  */
  
 #include "HubDevice.h"
@@ -11,7 +29,7 @@ const char SSDP_RootSearch[]            PROGMEM = "M-SEARCH * HTTP/1.1\r\n"
                                                   "HOST: 239.255.255.250:1900\r\n"
                                                   "MAN: ssdp:discover\r\n"
                                                   "ST: upnp:rootdevice\r\n"
-                                                  "ST.LEELANAUSOFTWARECO.COM: \r\n"
+                                                  "ST.LEELANAUSOFTWARE.COM: \r\n"
                                                   "USER-AGENT: ESP8266 UPnP/1.1 LSC-SSDP/1.0\r\n\r\n";
 const char LocationHeader[]             PROGMEM = "LOCATION";
 const char display_html[]               PROGMEM = "<H3 align=\"center\">Devices on %s</H3><br>";
@@ -25,12 +43,13 @@ const char brk_html[]                   PROGMEM = "<br><brk>";
  */
  
 INITIALIZE_STATIC_TYPE(HubDevice);
+INITIALIZE_UPnP_TYPE(HubDevice,urn:LeelanauSoftware-com:device:HubDevice:1);
 
-HubDevice::HubDevice() : ExtendedDevice("urn:LeelanauSoftwareCo-com:device:HubDevice:1","hub") {
+HubDevice::HubDevice() : ExtendedDevice("hub") {
   setDisplayName("Device Hub");
 }
 
-HubDevice::HubDevice(const char* type, const char* target) : ExtendedDevice(type, target) {
+HubDevice::HubDevice(const char* target) : ExtendedDevice(target) {
   setDisplayName("Device Hub");
 }
 

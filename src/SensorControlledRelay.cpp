@@ -1,5 +1,23 @@
 /**
  * 
+ *  DeviceLib Library
+ *  Copyright (C) 2023  Daniel L Toth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or any 
+ *  later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *  
+ *  The author can be contacted at dan@leelanausoftware.com  
+ *
  */
 
 #include "SensorControlledRelay.h"
@@ -36,12 +54,12 @@ const char mode_manual[] PROGMEM = "<div align=\"center\">&emsp;&emsp;<a href=\"
                                    "<span class=\"toggle-switch\"></span></a>&emsp;Manual&nbsp;&nbsp;&nbsp;</div><br>";
 
 /**
- *  Static RTT initialization
+ *  Static RTT and UPnP type initialization
  */
 INITIALIZE_STATIC_TYPE(SensorControlledRelay);
+INITIALIZE_UPnP_TYPE(SensorControlledRelay,urn:LeelanauSoftware-com:device:SensorControlledRelay:1);
 
-SensorControlledRelay::SensorControlledRelay() : RelayControl("urn:LeelanauSoftwareCo-com:device:SensorControlledRelay:1","SensorControlledRelay"),
-                                 _setModeSvc("urn:LeelanauSoftwareCo-com:service:setMode:1","setMode") {
+SensorControlledRelay::SensorControlledRelay() : RelayControl("SensorControlledRelay"), _setModeSvc("setMode") {
   addService(setModeSvc());
   setModeSvc()->setHttpHandler([this](WebContext* svr){this->setMode(svr);});
   setDisplayName("Sensor Controlled Relay");
@@ -49,8 +67,7 @@ SensorControlledRelay::SensorControlledRelay() : RelayControl("urn:LeelanauSoftw
   _timer.setHandler([this]{this->timerCallback();});
 }
 
-SensorControlledRelay::SensorControlledRelay(const char* type, const char* target) : RelayControl(type, target),
-                                 _setModeSvc("urn:LeelanauSoftwareCo-com:service:setMode:1","setMode") {
+SensorControlledRelay::SensorControlledRelay(const char* target) : RelayControl(target), _setModeSvc("setMode") {
   addService(setModeSvc());
   setModeSvc()->setHttpHandler([this](WebContext* svr){this->setMode(svr);});
   setDisplayName("Sensor Controlled Relay");
