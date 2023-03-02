@@ -14,7 +14,7 @@ DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPD
 |[SensorControlledRelay](https://github.com/dltoth/DeviceLib/blob/main/src/SensorControlledRelay.h)|A virtual subclass of RelayControl that allows control of a Relay with a Sensor|
 |[HumidityFan](https://github.com/dltoth/DeviceLib/blob/main/src/HumidityFan.h)|A SensorControlledRelay that couples a Thermometer with a RelayControl, with ON/OFF determined by relative humidity|
 |[OutletTimer](https://github.com/dltoth/DeviceLib/blob/main/src/OutletTimer.h)|A SensorControlledRelay that couples a SoftwareClock with a RelayControl with ON/OFF determined by time intervals|
-|[Hydrometer](https://github.com/dltoth/DeviceLib/blob/main/src/Hydrometer.h)|A soil moisture sensor|
+|[Hydrometer](https://github.com/dltoth/DeviceLib/blob/main/src/Hydrometer.h)|A Sensor that reads from the analog pin and computes soil moisture content.|
 |[ControlServices](https://github.com/dltoth/DeviceLib/blob/main/src/ControlServices.h)|UPnPServices for managing ControlState (ON/OFF) and ControlMode (AUTOMATIC/MANUAL)|
 
 The turn-key devices provided by this library can be mix and matched in a [boilerplate sketch]() to create a variaty of ESP devices, discoverable on a local network.
