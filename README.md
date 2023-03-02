@@ -1,5 +1,8 @@
 # DeviceLib
 DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPDevice) based on the [UPnP Device Architecture](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf) for ESP8266 and ESP32. Use of this library requires the companion libraries [CommonUtil](https://github.com/dltoth/CommonUtil) for user interface, [UPnPDevice](https://github.com/dltoth/UPnPDevice) for device architecture, [ssdp](https://github.com/dltoth/ssdp) for service discovery, and [WiFiPortal](https://github.com/dltoth/WiFiPortal) for access point configuration. It includes the following classes:
+&nbsp;
+
+&nbsp;
 
 |Class|Description|
 |---|---|
