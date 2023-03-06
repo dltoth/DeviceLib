@@ -17,4 +17,4 @@ DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPD
 |[Hydrometer](https://github.com/dltoth/DeviceLib/blob/main/src/Hydrometer.h)|A Sensor that reads from the analog pin and computes soil moisture content.|
 |[ControlServices](https://github.com/dltoth/DeviceLib/blob/main/src/ControlServices.h)|UPnPServices for managing ControlState (ON/OFF) and ControlMode (AUTOMATIC/MANUAL)|
 
-The turn-key devices provided by this library can be mix and matched in a [boilerplate sketch]() to create a variaty of ESP devices, discoverable on a local network.
+The turn-key devices provided by this library can be mix and matched in a [boilerplate sketch](https://github.com/dltoth/DeviceLib/blob/main/examples/DeviceLib/DeviceLib.ino) to create a variaty of ESP devices, discoverable on a local network.
