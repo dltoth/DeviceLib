@@ -135,6 +135,11 @@ void OutletTimer::nextCycle() {
               if( next_OFF > _end[i]  ) next_OFF = _end[i];
            }
            else if( (currentMins < _end[i]) && (next_OFF > _end[i]) ) next_OFF = _end[i];
+/**
+*          Update minimum start and end
+*/
+           if( _start[i] < minStart ) minStart = _start[i];
+           if( _end[i]   < minEnd   ) minEnd   = _end[i];
          }
 /**
 *        Interval DOES wrap around midnight
@@ -143,14 +148,16 @@ void OutletTimer::nextCycle() {
            if( (currentMins >= _start[i]) && (next_OFF > _end[i]) )       next_OFF = _end[i];       // Inside interval before midnight  
            else if( (currentMins < _end[i]) && (next_OFF > _end[i]) )     next_OFF = _end[i];       // Inside interval after midnight
            else if( (currentMins < _start[i]) && (next_ON > _start[i]) )  next_ON  = _start[i];     // Outside interval
+/**
+*          Update minimum start and end
+*/
+           if( _start[i] < minStart ) minStart = _start[i];
+           if( _end[i]   < minEnd   ) minEnd   = _end[i];
          }
          if(loggingLevel(FINEST)) printInterval(currentMins,_start[i],_end[i],next_ON,next_OFF);
-/**
-*        Update minimum start and end
-*/
-         if( _start[i] < minStart ) minStart = _start[i];
-         if( _end[i]   < minEnd   ) minEnd   = _end[i];
       }
+      if(loggingLevel(FINEST)) Serial.printf("OutletTimer::nextCycle: minStart is %02d:%02d and minEnd is %02d:%02d\n",
+                                             minStart/60,minStart%60,minEnd/60,minEnd%60);
 /**
 *     If current falls outside of all intervals and is not ahead of
 *     a wrap-around interval, next_ON and possibly next_OFF were not set.

@@ -49,6 +49,9 @@ class GetSoilMoisture : public UPnPService {
     DERIVED_TYPE_CHECK(UPnPService);
 };
 
+/**
+ *   Hydrometer is a Sensor that reads from the analog pin and computes soil moisture content.
+ */
 class Hydrometer : public Sensor {
   public:
   Hydrometer();

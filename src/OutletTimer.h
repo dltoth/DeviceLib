@@ -32,9 +32,9 @@
 namespace lsc {
 
 /**
- *   Number of Timer intevals is 3
+ *   Number of Timer intevals is 2, only because of buffer size
  */
-#define MAX_TIMER_INTERVALS 3
+#define MAX_TIMER_INTERVALS 2
 
 /** OutletTimer is a SensorControlledRelay that couples a SoftwareClock (for time) with a relay in order 
  *  to control a power outlet. 
