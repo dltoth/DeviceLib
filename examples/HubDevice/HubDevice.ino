@@ -1,7 +1,7 @@
 /**
  * 
  *  DeviceLib Library
- *  Copyright (C) 2023  Daniel L Toth
+ *  Copyright (C) 2024  Daniel L Toth
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published 
@@ -20,33 +20,21 @@
  *
  */
 
-#include <ssdp.h>
 #include <WiFiPortal.h>
-#include <SoftwareClock.h>
-#include <HubDevice.h>
-
-using namespace lsc;
+#include <DeviceLib.h>
 
 #define SOFT_AP_SSID "SleepingBear"
 #define SOFT_AP_PSK  "BigLakeMI"
 #define SERVER_PORT 80
 
 #ifdef ESP8266
-#include <ESP8266mDNS.h>
-#include <ESP8266WebServer.h>
-ESP8266WebServer  server(SERVER_PORT);
-ESP8266WebServer* svr = &server;
 #define           BOARD "ESP8266"
 #elif defined(ESP32)
-#include <ESPmDNS.h>
-#include <WebServer.h>
-WebServer        server(SERVER_PORT);
-WebServer*       svr = &server;
 #define          BOARD "ESP32"
 #endif
 
-WebContext       context;
-WebContext*      ctx = &context;
+WebContext       ctx;
+WebContext*      svr = &ctx;
 WiFiPortal       portal;
 const char*      hostname = "hub";
 
@@ -120,12 +108,11 @@ void setup() {
 /**
  * Setup Web Context for serving the HTML UI. 
  */
-  server.begin();
-  ctx->setup(svr,WiFi.localIP(),SERVER_PORT);
-  Serial.printf("Web Server started on %s:%d/\n",ctx->getLocalIPAddress().toString().c_str(),ctx->getLocalPort());
+  ctx.begin(SERVER_PORT);
+  Serial.printf("Web Server started on %s:%d/\n",WiFi.localIP().toString().c_str(),ctx.getLocalPort());
 
   hub.setTarget("hub");
-  hub.setup(ctx);
+  hub.setup(svr);
   hub.addDevice(&c);
 
   Serial.printf("Starting main loop\n");
@@ -133,7 +120,7 @@ void setup() {
 
 void loop() {
   ssdp.doSSDP();            // Handle SSDP queries
-  server.handleClient();    // Handle HTTP requests
+  ctx.handleClient();       // Handle HTTP requests
   hub.doDevice();           // Do a unit of work for the device
   updateMDNS();             // Update MDNS for ESP8266 if hostname is present on Connection String
 }

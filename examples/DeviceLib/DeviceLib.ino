@@ -20,48 +20,32 @@
  *
  */
  
-#include <ssdp.h>
 #include <WiFiPortal.h>
-#include "Thermometer.h"
-#include "Hydrometer.h"
-#include "HumidityFan.h"
-#include "OutletTimer.h"
-#include "SoftwareClock.h"
-#include "ExtendedDevice.h"
-
-using namespace lsc;
+#include "DeviceLib.h"
 
 #define SOFT_AP_SSID "SleepingBear"
 #define SOFT_AP_PSK  "BigLakeMI"
-#define SERVER_PORT 80
+#define SERVER_PORT   80
 
 #ifdef ESP8266
-#include <ESP8266mDNS.h>
-#include <ESP8266WebServer.h>
-ESP8266WebServer  server(SERVER_PORT);
-ESP8266WebServer* svr = &server;
 #define           BOARD "ESP8266"
 #elif defined(ESP32)
-#include <ESPmDNS.h>
-#include <WebServer.h>
-WebServer        server(SERVER_PORT);
-WebServer*       svr = &server;
 #define          BOARD "ESP32"
 #endif
 
 WebContext       context;
-WebContext*      ctx = &context;
 WiFiPortal       portal;
 
 SSDP             ssdp;
 ExtendedDevice   root;
-SoftwareClock    sw_clock;
+
+
+SoftwareClock    c;
 Thermometer      t;
 Hydrometer       h;
 HumidityFan      f;
 OutletTimer      o;
 const char*      hostname = "BigBang";
-
 
 void setup() {
   Serial.begin(115200);
@@ -108,16 +92,17 @@ void setup() {
   }
 
   Serial.printf("\nWiFi Connected to %s with IP address: %s\n",WiFi.SSID().c_str(),WiFi.localIP().toString().c_str());
+
 /**
  *  Set timezone to Eastern Standard time
  */
-  sw_clock.setTimezone(-5);
-  sw_clock.setDisplayName("Clock");
+  c.setTimezone(-5.0);
+  c.setDisplayName("Clock");
 
 /**
  *  Set display name to something recognizable. 
  */
-  root.setDisplayName("Extended Device");
+  root.setDisplayName("NTP Clock Test");
 
 /**
  *  Initialize SSDP services
@@ -126,36 +111,56 @@ void setup() {
   ssdp.begin(&root);
 
 /**
- * Setup Web Context for serving the HTML UI. 
+ *  Setup Web Context for serving the HTML UI. 
  */
-  server.begin();
-  ctx->setup(svr,WiFi.localIP(),SERVER_PORT);
-  Serial.printf("Web Server started on %s:%d/\n",ctx->getLocalIPAddress().toString().c_str(),ctx->getLocalPort());
+  context.begin();
+  Serial.printf("Web Server started on %s:%d/\n",WiFi.localIP().toString().c_str(),context.getLocalPort());
+
+  c.setTimezone(-5);
+  c.setDisplayName("System Clock");
+  c.setNTPSync(60);                  // Sync with the NTP server evern hour
+
+/**
+ *  Both HumidityFan and OutletControl derive from RelayControl which sets a default Pin to D5 (GPIO pin 14), 
+ *  so one of the devices has to redefine the Pin number:
+ *      HumidityFan - WEMOS_D7 (GPIO 13)
+ *      OutletTimer - WEMOS_D5 (GPIO pin 14)
+ *  and this must be done prior to setup()
+ */
+  f.pin(WEMOS_D7);
   
-  root.setTarget("testDevice");
-  root.setup(ctx);
-  
+  root.setTarget("root");
+  root.setDisplayName("Extended Device");
+  root.setup(&context);
+   
 /**
  *  Late binding for embedded devices; setup will be called for each device as  
  *  they are added. Alternavively, embedded devices can be added prior to RootDevice 
- *  setup. In either case, Sensors are displayed in the order that they are added.
- *  Note that device target must be set prior to calling setup or adding to the 
- *  RootDevice.
+ *  setup. In either case, Devices are displayed in the order that they are added.
+ *  Note that since device target is used in setting HandlerFunctions on the WebServer in setup(), target 
+ *  must be set prior to calling setup or adding to the RootDevice.
  */
-  root.addDevices(&f,&o,&t,&h,&sw_clock);
+  root.addDevices(&f,&o,&t,&h,&c);
+
+
+  char dateBuff[64];
+  c.initializationDate().printDateTime(dateBuff,64);
+  Serial.printf("Software Clock initialized to %s\n",dateBuff);
+  c.now().printDateTime(dateBuff,64);
+  Serial.printf("Software Clock Test started at %s\n",dateBuff);
 
 /**
  *  
  * Print UPnP Info about RootDevice, Services, and embedded Devices
  * 
  */
-  RootDevice::printInfo(&root);
+//  RootDevice::printInfo(&root);
 
 }
 
 void loop() {
   ssdp.doSSDP();            // Handle SSDP queries
-  server.handleClient();    // Handle HTTP requests
+  context.handleClient();   // Handle HTTP requests
   root.doDevice();          // Do a unit of work for the device
   updateMDNS();             // Update MDNS for ESP8266 if hostname is present on Connection String
 }
@@ -165,4 +170,5 @@ void updateMDNS() {
   if( portal.hasHostName() ) MDNS.update();
 #endif
 }
+
 
