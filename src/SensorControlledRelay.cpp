@@ -27,39 +27,65 @@
 */
 namespace lsc {
 
-const char msg_display[] PROGMEM = "<br><div align=\"center\">%s</div>";
+const char msg_display[]     PROGMEM = "<br><div align=\"center\">%s</div>";
+
+const char table_start[]     PROGMEM = "<div align=\"center\"><table>";
+
+// Control State = ON
+const char table_state_ON[]  PROGMEM = "<tr>"
+        "<td><a href=\"./setState?STATE=OFF\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\" checked><span class=\"toggle-switch\"></span></a></td>"
+        "<td>&ensp;ON</td>"
+      "</tr>";
+
+// Control State = OFF
+const char table_state_OFF[] PROGMEM = "<tr>"
+        "<td><a href=\"./setState?STATE=ON\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\"><span class=\"toggle-switch\"></span></a></td>"
+        "<td>&ensp;OFF</td>"
+      "</tr>";
+
+// Control Mode = AUTOMATIC
+const char table_mode_AUTO[]  PROGMEM = "<tr>"
+        "<td><a href=\"./setMode?MODE=MANUAL\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\" checked><span class=\"toggle-switch\"></span></a></td>"
+        "<td>&ensp;Automatic</td>"
+      "</tr>";
+
+// Control Mode = MANUAL
+const char table_mode_MAN[] PROGMEM = "<tr>"
+        "<td><a href=\"./setMode?MODE=AUTOMATIC\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\"><span class=\"toggle-switch\"></span></a></td>"
+        "<td>&ensp;Manual&ensp;&ensp;</td>"
+      "</tr>";
+    
+const char table_tail[]      PROGMEM = "</table><br></div>";
 
 /**
  * Relay Slider ON
- */
-const char state_on[]    PROGMEM = "<div align=\"center\"><a href=\"./setState?STATE=OFF\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\" checked>"
-                                   "<span class=\"toggle-switch\"></span></a>&emsp;ON&nbsp;</div>";
 
-/**
+const char state_on[]    PROGMEM = "<div align=\"center\"><a href=\"./setState?STATE=OFF\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\" checked>"
+                                   "<span class=\"toggle-switch\"></span></a>&emsp;ON</div>";
+
  * Relay Slider OFF
- */
+
 const char state_off[]   PROGMEM = "<div align=\"center\"><a href=\"./setState?STATE=ON\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\">"
                                    "<span class=\"toggle-switch\"></span></a>&emsp;OFF</div>";
 
-/**
  * Automatic Slider ON
- */
+
 const char mode_auto[]   PROGMEM = "<div align=\"center\">&emsp;&emsp;&nbsp;<a href=\"./setMode?MODE=MANUAL\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\" checked>"
                                    "<span class=\"toggle-switch\"></span></a>&emsp;Automatic</div><br>";
 
-/**
- * Automatic Slider OFF
- */
-const char mode_manual[] PROGMEM = "<div align=\"center\">&emsp;&emsp;<a href=\"./setMode?MODE=AUTOMATIC\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\">"
-                                   "<span class=\"toggle-switch\"></span></a>&emsp;Manual&nbsp;&nbsp;&nbsp;</div><br>";
 
+ * Automatic Slider OFF
+
+const char mode_manual[] PROGMEM = "<div align=\"center\">&emsp;&emsp;<a href=\"./setMode?MODE=AUTOMATIC\" class=\"toggle\"><input class=\"toggle-checkbox\" type=\"checkbox\">"
+                                   "<span class=\"toggle-switch\"></span></a>&emsp;Manual</div><br>";
+**/
 /**
  *  Static RTT and UPnP type initialization
  */
-INITIALIZE_STATIC_TYPE(SensorControlledRelay);
-INITIALIZE_UPnP_TYPE(SensorControlledRelay,urn:LeelanauSoftware-com:device:SensorControlledRelay:1);
+INITIALIZE_DEVICE_TYPES(SensorControlledRelay,LeelanauSoftware-com,SensorControlledRelay,1.0.0);
 
 SensorControlledRelay::SensorControlledRelay() : RelayControl("SensorControlledRelay"), _setModeSvc("setMode") {
+  
   addService(setModeSvc());
   setModeSvc()->setHttpHandler([this](WebContext* svr){this->setMode(svr);});
   setDisplayName("Sensor Controlled Relay");
@@ -75,13 +101,15 @@ SensorControlledRelay::SensorControlledRelay(const char* target) : RelayControl(
   _timer.setHandler([this]{this->timerCallback();});
 }
 
-void  SensorControlledRelay::content(char buffer[], int size) {  
-  int pos = 0;
-  if( loggingLevel(FINE) ) Serial.printf("SensorControlledRelay::content: Relay state is %s and mode is %s\n",controlState(),controlMode());
-  if( isAUTOMATIC() ) pos = formatBuffer_P(buffer,size,pos,mode_auto);
-  else pos = formatBuffer_P(buffer,size,pos,mode_manual);
-  if( isON() ) pos = formatBuffer_P(buffer,size,pos,state_on);         
-  else pos = formatBuffer_P(buffer,size,pos,state_off);          
+int  SensorControlledRelay::formatContent(char buffer[], int size, int pos) {  
+  if( loggingLevel(FINE) ) Serial.printf("SensorControlledRelay::formatContent: %s Relay state is %s and mode is %s\n",getDisplayName(),controlState(),controlMode());
+  pos = formatBuffer_P(buffer,size,pos,table_start);
+  if( isAUTOMATIC() ) pos = formatBuffer_P(buffer,size,pos,table_mode_AUTO);
+  else pos = formatBuffer_P(buffer,size,pos,table_mode_MAN);
+  if( isON() ) pos = formatBuffer_P(buffer,size,pos,table_state_ON);         
+  else pos = formatBuffer_P(buffer,size,pos,table_state_OFF);  
+  pos = formatBuffer_P(buffer,size,pos,table_tail);
+  return pos;        
 }
 
 /**
@@ -89,8 +117,8 @@ void  SensorControlledRelay::content(char buffer[], int size) {
  *   to change mode to MANUAL as well.
  */
 void SensorControlledRelay::setControlState(ControlState flag) {
+   if(loggingLevel(FINE)) Serial.printf("SensorControlledRelay::setControlState: Relay state is %s, setting state to %s\n",controlState(),((flag==ON)?("ON"):("OFF")));
    relayState(flag);
-   if(loggingLevel(FINE)) Serial.printf("SensorControlledRelay::setControlState setting state to %s\n",controlState());
    if(isAUTOMATIC()) {
      if(loggingLevel(FINE)) Serial.printf("SensorControlledRelay::setControlState setting mode to MANUAL\n");
      setControlMode(MANUAL);

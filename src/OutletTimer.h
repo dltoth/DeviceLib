@@ -52,6 +52,7 @@ class OutletTimer : public SensorControlledRelay {
   public: 
       OutletTimer();
       OutletTimer( const char* target );
+      virtual ~OutletTimer() {}
 
       const char*     nextOn();              // Return time (as char*) of next ON cycle
 
@@ -64,12 +65,12 @@ class OutletTimer : public SensorControlledRelay {
 /**
 *    Frame height from Control
 */
-      virtual int      frameHeight()  {return 125;}
+      virtual int      frameHeight()  {return 110;}
 
 /**
  *    Display this Control
  */
-      void             content(char buffer[], int size);
+      int              formatContent(char buffer[], int size, int pos);
       const char*      nextON()       {nextCycle(); return _nextON;}
       const char*      nextOFF()      {nextCycle(); return _nextOFF;}
 
@@ -79,11 +80,11 @@ class OutletTimer : public SensorControlledRelay {
  */
 
 /**
- *   Configuration support
+ *   Configuration support (set from Control)
  */
       void             configForm(WebContext* svr);
-      void             setOutletTimerConfiguration(WebContext* svr);
-      void             getOutletTimerConfiguration(WebContext* svr); 
+      void             handleSetConfiguration(WebContext* svr);
+      void             handleGetConfiguration(WebContext* svr); 
 
 /**
  *   Macros to define the following Runtime and UPnP Type Info:
@@ -119,7 +120,7 @@ class OutletTimer : public SensorControlledRelay {
       char                _nextOFF[8];                              // Character representation of next OFF hh:mm
 
 /**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(OutletTimer);         
 

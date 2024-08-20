@@ -27,8 +27,8 @@
 */
 namespace lsc {
 
-const char next_on[]      PROGMEM = "<br><div align=\"center\">ON at %s</div>";
-const char next_off[]     PROGMEM = "<br><div align=\"center\">OFF at %s</div>";
+const char next_on[]      PROGMEM = "<div align=\"center\">ON at %s</div>";
+const char next_off[]     PROGMEM = "<div align=\"center\">OFF at %s</div>";
 
 /**
  *    Variable input to form is service action url, display name placeholder, start time, end time, cancel url
@@ -65,38 +65,23 @@ const char timer_config_template_tail[]  PROGMEM = "</config>";
 /**
  *  Static RTT initialization
  */
-INITIALIZE_STATIC_TYPE(OutletTimer);
-INITIALIZE_UPnP_TYPE(OutletTimer,urn:LeelanauSoftware-com:device:OutletTimer:1);
+INITIALIZE_DEVICE_TYPES(OutletTimer,LeelanauSoftware-com,OutletTimer,1.0.0);
 
 OutletTimer::OutletTimer() : SensorControlledRelay("outletTimer") {
   setDisplayName("Outlet Timer");
-  
-/**
- *   Setup Configuration handlers
- */
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setOutletTimerConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getOutletTimerConfiguration(svr);});
 }
 
 OutletTimer::OutletTimer(const char* target) : SensorControlledRelay(target) {
   setDisplayName("Outlet Timer");
-
-/**
- *   Setup Configuration handlers
- */
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setOutletTimerConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getOutletTimerConfiguration(svr);});
 }
 
-void  OutletTimer::content(char buffer[], int size) {  
-  SensorControlledRelay::content(buffer,size);
-  int pos = strlen(buffer); 
+int  OutletTimer::formatContent(char buffer[], int size, int pos) {  
+  pos = SensorControlledRelay::formatContent(buffer,size,pos);
   if( isAUTOMATIC() ) {
     if( isON() ) pos = formatBuffer_P(buffer,size,pos,next_off,nextOFF()); 
     else pos = formatBuffer_P(buffer,size,pos,next_on,nextON());
-  }          
+  } 
+  return pos;         
 }
 
 /**
@@ -112,9 +97,8 @@ void OutletTimer::nextCycle() {
 /**
  *    Calculate minutes since midnight
  */
-      int h, m, s;
-      c->getTime(h,m,s);
-      int currentMins = h*60 + m;
+      Time t = c->now().toTime();
+      int currentMins = t.hour*60 + t.min;
       int next_ON     = 1440;       // 1440 mins in a day (60*24)
       int next_OFF    = 1440;
       int minStart    = 1440;
@@ -191,9 +175,8 @@ ControlState OutletTimer::sensorState() {
   /**
   *   Calculate minutes since midnight
   */
-    int h, m, s;
-    c->getTime(h,m,s);
-    int currentMins = h*60 + m;
+    Time t = c->now().toTime();
+    int currentMins = t.hour*60 + t.min;
     
   /**
   *   Compare minutes since midnight to stored timer intervals. Outlet should be ON if the current time is within
@@ -236,8 +219,7 @@ void OutletTimer::configForm(WebContext* svr) {
   char pathBuff[100];
   getPath(pathBuff,100);
   char svcPath[100];
-  setConfiguration()->getPath(svcPath,100);
-
+  setConfigurationSvc()->getPath(svcPath,100);
   pos = formatBuffer_P(buffer,size,pos,timer_config_form_head,svcPath,getDisplayName());
   
   for(int i=0; i<MAX_TIMER_INTERVALS; i++ ) {
@@ -262,7 +244,7 @@ void OutletTimer::configForm(WebContext* svr) {
   svr->send(200,"text/html",buffer); 
 }
 
-void OutletTimer::setOutletTimerConfiguration(WebContext* svr) {
+void OutletTimer::handleSetConfiguration(WebContext* svr) {
   int numArgs = svr->argCount();
   for( int i=0; i<numArgs; i++) {
      const String& argName = svr->argName(i);
@@ -352,7 +334,7 @@ int OutletTimer::argSequenceNumber(const String& argName) {
    return result;
 }
 
-void OutletTimer::getOutletTimerConfiguration(WebContext* svr) {
+void OutletTimer::handleGetConfiguration(WebContext* svr) {
   char buffer[1000];
   size_t bufferSize = sizeof(buffer);
   int size = bufferSize;

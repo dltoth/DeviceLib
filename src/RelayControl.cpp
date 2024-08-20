@@ -45,8 +45,7 @@ const char relay_off[]  PROGMEM = "<div align=\"center\">&ensp;<a href=\"./setSt
 /**
  *  Static RTT initialization
  */
-INITIALIZE_STATIC_TYPE(RelayControl);
-INITIALIZE_UPnP_TYPE(RelayControl,urn:LeelanauSoftware-com:device:RelayControl:1);
+INITIALIZE_DEVICE_TYPES(RelayControl,LeelanauSoftware-com,RelayControl,1.0.0);
 
 RelayControl::RelayControl() : Control("RelayControl"), _setStateSvc("setState") {
   addService(setStateSvc());
@@ -70,7 +69,7 @@ void RelayControl::setState(WebContext* svr) {
          const String& argName = svr->argName(i);
          const String& argVal = svr->arg(i);
          if(argName.equalsIgnoreCase("STATE")) {
-            if( loggingLevel(FINE) ) Serial.printf("RelayControl::setMode: Setting STATE to %s\n",argVal.c_str());
+            if( loggingLevel(FINE) ) Serial.printf("RelayControl::setState: Setting STATE to %s\n",argVal.c_str());
             if( argVal.equalsIgnoreCase("ON")) setControlState(ON);
             else if( argVal.equalsIgnoreCase("OFF") ) setControlState(OFF);
             break;
@@ -80,9 +79,8 @@ void RelayControl::setState(WebContext* svr) {
    displayControl(svr);
 }
 
-void  RelayControl::content(char buffer[], int size) {  
-  int pos = 0;
-  if( loggingLevel(FINE) ) Serial.printf("RelayControl::content: Relay state is %s \n",controlState());
+int  RelayControl::formatContent(char buffer[], int size, int pos) {  
+  if( loggingLevel(FINE) ) Serial.printf("RelayControl::content: %s Relay state is %s \n",getDisplayName(),controlState());
   if( isON() ) {
     pos = formatBuffer_P(buffer,size,pos,relay_on);  
     pos = formatBuffer_P(buffer,size,pos,on_msg);          
@@ -90,7 +88,8 @@ void  RelayControl::content(char buffer[], int size) {
   else {
     pos = formatBuffer_P(buffer,size,pos,relay_off); 
     pos = formatBuffer_P(buffer,size,pos,off_msg);          
-  }         
+  }  
+  return pos;       
 }
 
 
@@ -100,23 +99,24 @@ void RelayControl::setControlState(ControlState flag) {
  *  If ControlState is set to ON, send HIGH to the relay
  */
   if(flag == ON) {
-    digitalWrite(getPin(),HIGH);
-    if( loggingLevel(FINE) ) Serial.printf("RelayControl::setControlState: Outlet turned ON, set to %d\n", HIGH);
+    digitalWrite(pin(),HIGH);
+    if( loggingLevel(FINE) ) Serial.printf("RelayControl::setControlState: %s Relay turned ON, set to %d\n", getDisplayName(),HIGH);
   }
 /**
  *  Otherwise send LOW
  */
   else {
-    digitalWrite(getPin(),LOW);
-    if( loggingLevel(FINE) ) Serial.printf("RelayControl::setControlState: Outlet turned OFF, set to %d\n", LOW);
+    digitalWrite(pin(),LOW);
+    if( loggingLevel(FINE) ) Serial.printf("RelayControl::setControlState: %s Relay turned OFF, set to %d\n",getDisplayName(), LOW);
   }
 }
 
 void RelayControl::setup(WebContext* svr) {
   Control::setup(svr);
-  pinMode(getPin(),OUTPUT);
-  digitalWrite(getPin(),LOW);
-  if( loggingLevel(FINE) ) Serial.printf("RelayControl::setup: Digital pin %d initialized to %d and set to %d\n",getPin(),OUTPUT,LOW);
+  pinMode(pin(),OUTPUT);
+  digitalWrite(pin(),LOW);
+  if( loggingLevel(FINE) )  Serial.printf("RelayControl::setup: %s pin %d set to %s\n",getDisplayName(),pin(),controlState());
+
 }
 
 } // End of namespace lsc

@@ -20,8 +20,6 @@
  *
  */
 
-#include <ssdp.h>
-#include <UPnPBuffer.h>
 #include "ExtendedDevice.h"
 
 namespace lsc {
@@ -41,7 +39,7 @@ const char ExtendedDevice_config_form[]      PROGMEM = "<form action=\"%s\"><div
          "<button class=\"fmButton\" type=\"submit\">Submit</button>&nbsp&nbsp"
          "<button class=\"fmButton\" type=\"button\" onclick=\"window.location.href=\'%s\';\">Cancel</button>"                                           // Cancel path
       "</div></form><br><br>";
-const char ExtendedDevice_resetAP[]          PROGMEM = "<h3 align=\"center\"> Select OK to clear network credentials for %s </h3>"                          // ssid
+const char ExtendedDevice_resetAP[]          PROGMEM = "<h3 align=\"center\"> Select OK to clear network credentials for %s </h3>"                       // ssid
                                                     "<h4 align=\"center\">Access Point can be reset on next device power cycle </h4><br><br>"
                                           "<div align=\"center\">"
                                              "<a href=\"%s\" class=\"small apButton\">OK</a>&nbsp&nbsp"                                                  // Clear credentials path
@@ -54,20 +52,22 @@ const char brk_html[]                   PROGMEM = "<br>";
 /**
  *  Static RTT initialization
  */
- 
-INITIALIZE_STATIC_TYPE(ExtendedDevice);
-INITIALIZE_UPnP_TYPE(ExtendedDevice,urn:LeelanauSoftware-com:device:ExtendedDevice:1);
+ INITIALIZE_DEVICE_TYPES(ExtendedDevice,LeelanauSoftware-com,ExtendedDevice,1.0.0);
 
 ExtendedDevice::ExtendedDevice() : RootDevice("root") {
-  addServices(getConfiguration(),setConfiguration());   // Add services for configuration
+  addServices(getConfigurationSvc(),setConfigurationSvc());   // Add services for configuration
   setDisplayName("Extended Device");
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
+  setConfigurationSvc()->setHttpHandler([this](WebContext* svr){this->handleSetConfiguration(svr);});
+  setConfigurationSvc()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
+  getConfigurationSvc()->setHttpHandler([this](WebContext* svr){this->handleGetConfiguration(svr);});
 }
 
 ExtendedDevice::ExtendedDevice(const char* target) : RootDevice(target) {
-  addServices(getConfiguration(),setConfiguration());   // Add services for configuration
+  addServices(getConfigurationSvc(),setConfigurationSvc());   // Add services for configuration
   setDisplayName("Extended Device");
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
+  setConfigurationSvc()->setHttpHandler([this](WebContext* svr){this->handleSetConfiguration(svr);});
+  setConfigurationSvc()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
+  getConfigurationSvc()->setHttpHandler([this](WebContext* svr){this->handleGetConfiguration(svr);});
 }
 
 void ExtendedDevice::display(WebContext* svr) {
@@ -82,18 +82,12 @@ void ExtendedDevice::display(WebContext* svr) {
 /** Add a button for each embedded device
  *  
  */
-  char pathBuff[100];
-  for( int i=0; (i<_numDevices) && (size>0); i++ ) {
-    UPnPDevice* d = device(i);
-    if( d != NULL ) {
-       d->getPath(pathBuff,100);
-       pos = formatBuffer_P(buffer,size,pos,app_button,pathBuff,d->getDisplayName());
-    }
-  }
+  pos = formatContent(buffer,size,pos);
 
 /** Add a Config button 
  */
-  setConfiguration()->formPath(pathBuff,100);
+  char pathBuff[100];
+  setConfigurationSvc()->formPath(pathBuff,100);
   pos = formatBuffer_P(buffer,size,pos,brk_html);
   pos = formatBuffer_P(buffer,size,pos,config_button,pathBuff,"Configure");
 
@@ -103,9 +97,6 @@ void ExtendedDevice::display(WebContext* svr) {
   svr->send(200,"text/html",buffer);
 }
 
-/**
- *   *** Needs to incorporate an iframe for display of controls.
- */
 void ExtendedDevice::displayRoot(WebContext* svr) {
   char buffer[DISPLAY_SIZE];
   int size = sizeof(buffer);
@@ -116,8 +107,7 @@ void ExtendedDevice::displayRoot(WebContext* svr) {
 
 /** Add Content 
  */
-  formatContent(buffer+pos,size-pos);
-  pos = strlen(buffer);
+  pos = formatRootContent(buffer,size,pos);
 
 /** Add a Nearby Devices button that will display all nearby RootDevices as buttons
  */
@@ -136,7 +126,7 @@ void ExtendedDevice::nearbyDevices(WebContext* svr) {
   char buffer[DISPLAY_SIZE];
   int size = sizeof(buffer);
 
-  IPAddress remote = svr->getRemoteIPAddress();
+  IPAddress remote = svr->client().remoteIP();
   String ssidStr;
   IPAddress ifc;
   if(SSDP::isSoftAPIP(remote)) {
@@ -192,7 +182,7 @@ void ExtendedDevice::configForm(WebContext* svr) {
   char pathBuff[100];
   getPath(pathBuff,100);
   char svcPath[100];
-  setConfiguration()->getPath(svcPath,100);
+  setConfigurationSvc()->getPath(svcPath,100);
   pos = formatBuffer_P(buffer,size,pos,ExtendedDevice_config_form,svcPath,getDisplayName(),resetAPPath,pathBuff);
 
 /**
@@ -229,7 +219,7 @@ void ExtendedDevice::resetAP(WebContext *svr) {
   char clearAPPath[100];
   handlerPath(clearAPPath,100,"clearAP");
   char svcPath[100];
-  setConfiguration()->getPath(svcPath,100);
+  setConfigurationSvc()->getPath(svcPath,100);
   String ssid = WiFi.SSID();
   pos = formatBuffer_P(buffer,size,pos,ExtendedDevice_resetAP,ssid.c_str(),clearAPPath,svcPath);
 

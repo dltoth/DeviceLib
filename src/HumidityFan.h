@@ -38,7 +38,7 @@ namespace lsc {
 
 /** HumidityFan is a SensorControlledRelay that couples a Thermometer (for humidity) with a relay in order 
  *  to control a humidity fan. 
- *  SensorControlledRelay will poll the Sensor for ControlState, so we also use his as an opportunity to
+ *  SensorControlledRelay will poll the Sensor for ControlState, so we also use this as an opportunity to
  *  cache the humidity reading.
  *
  *  Extending SensorControlledRelay requires implementation of the following:
@@ -54,6 +54,7 @@ class HumidityFan : public SensorControlledRelay {
   public: 
       HumidityFan();
       HumidityFan( const char* target );
+      virtual ~HumidityFan() {}
 
       float            humidity()                      {return _humidity;}
       int              threshold()                     {return _threshold;}
@@ -73,7 +74,7 @@ class HumidityFan : public SensorControlledRelay {
 /**
  *    Display this Control
  */
-      void             content(char buffer[], int size);
+      int             formatContent(char buffer[], int size, int pos);
 
 /**
  *  Set/Get/Check Logging Level provided by RelayControl. Logging Level can be NONE, 
@@ -81,11 +82,11 @@ class HumidityFan : public SensorControlledRelay {
  */
 
 /**
- *   Configuration support
+ *   Configuration support (set from Control)
  */
-      void             configForm(WebContext* svr);
-      void             setHumidityFanConfiguration(WebContext* svr);
-      void             getHumidityFanConfiguration(WebContext* svr);  
+      void             configForm(WebContext* svr);                 // Config form display
+      void             handleSetConfiguration(WebContext* svr);     // HTTP handler for setConfiguration Service - set on configForm
+      void             handleGetConfiguration(WebContext* svr);     // HTTP Handler for getConfiguration Service
 
 /**
  *   Macros to define the following Runtime and UPnP Type Info:
@@ -116,7 +117,7 @@ class HumidityFan : public SensorControlledRelay {
       float          _humidity  = 0.0;
 
 /**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(HumidityFan);         
 

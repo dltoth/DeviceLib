@@ -22,8 +22,9 @@
 
 #ifndef SOFTWARECLOCK_H
 #define SOFTWARECLOCK_H
-#include <SensorDevice.h>
-#include "NTPTime.h"
+#include <SystemClock.h>
+#include "SensorDevice.h"
+#define NTP_SYNC       120     // Synchronize system time with NTP every 2 hours
 
 /** Leelanau Software Company namespace 
 *  
@@ -54,49 +55,57 @@ class GetDateTime : public UPnPService {
 
 /**
  *  Software Clock is a configurable sensor that provides date and time, synchronized with an NTP server.
- *  It is designed to fetch NTP time and synchronize to a common system time (sysTime()) at
- *  only on a set interval, regardless of the number of SoftwareClocks present in a UPnPDevice.
+ *  It is designed to fetch NTP time and synchronize to a common system time (sysTime()) on a set interval.
  */
 class SoftwareClock : public Sensor {
     public:
-      SoftwareClock();
-      SoftwareClock( const char* target );
+    SoftwareClock();
+    SoftwareClock( const char* target );
+    virtual ~SoftwareClock() {}
 
-      void           getTime(char* buffer, int len,long t);
-      void           getDate(char* buffer, int len, long t);
-      void           getTime(char* buffer, int len)              {getTime(buffer,len,now());}
-      void           getDate(char* buffer, int len)              {getDate(buffer,len,now());}
-      void           getTime(int& h, int& m, int& s)             {_ntp.getTime(_tzOffset,h,m,s);}
-      void           getDate(int& m, int& d, int& y)             {_ntp.getDate(_tzOffset,m,d,y);}
-      void           utcTime(long t, int& h, int& m, int& s)     {_ntp.utcTime(t,h,m,s);}
-      void           utcDate(long t, int& m, int& d, int& y)     {_ntp.utcDate(t,m,d,y);}
-      void           setTimezone( int offset)                    {_tzOffset = offset;}
-      int            getTimezone()                               {return _tzOffset;}
-      int            getRefresh()                                {return _ntp.getRefresh();}
-      void           setRefresh(int secs)                        {_ntp.setRefresh(secs);}
-      long           now()                                       {return _ntp.now(_tzOffset);}
+    virtual void             setTimezone(double hours)                {_sysClock.tzOffset(hours);}
+    virtual void             initialize(const Instant& ref)           {_sysClock.initialize(ref);}
+    virtual const Instant&   initializationDate()                     {return _sysClock.initializationDate();}
+    virtual double           getTimezone()                            {return _sysClock.tzOffset();}
+    virtual void             setNTPSync(unsigned int mins)            {_sysClock.ntpSync(mins);}
+    virtual unsigned int     getNTPSync()                             {return _sysClock.ntpSync();}
+    virtual Instant          lastSync()                               {return _sysClock.lastSync();}
+    virtual Instant          nextSync()                               {return _sysClock.nextSync();}
+    virtual Instant          now()                                    {return _sysClock.now();}
+    virtual Instant          sysTime()                                {return _sysClock.sysTime();}
+    virtual Instant          updateSysTime()                          {return _sysClock.updateSysTime();}
+    virtual void             reset()                                  {_sysClock.reset();}
+    virtual const Timestamp& startTime()  const                       {return _sysClock.startTime();}
 
 /**
  *   Virtual Functions required for UPnPDevice
  */
-      void           setup(WebContext* svr);
+    void                     setup(WebContext* svr);
+    void                     doDevice()                               {_sysClock.doDevice();}
 
-/**  Form handler for UTC Refresh
+/**  Form handlers for NTP Refresh and clock reset
  *   
  */
-      void           refreshUTC(WebContext* svr);
+void                       refreshNTP(WebContext* svr)                {updateSysTime();display(svr);}
+void                       resetClock(WebContext* svr)                {reset();display(svr);}
 
 /**
  *   Virtual Functions required by Sensor
  */
-      void           content(char buffer[], int bufferSize);
+     int                   formatContent(char buffer[], int bufferSize, int pos);
+     int                   formatRootContent(char buffer[], int bufferSize, int pos);
 
 /**
- *    Methods to customize configuration
+ *    Methods to customize configuration (defined and set on Sensor)
  */
-      void           configForm(WebContext* svr);
-      void           getClockConfiguration(WebContext* svr);
-      void           setClockConfiguration(WebContext* svr);
+      void                 configForm(WebContext* svr);
+      void                 handleSetConfiguration(WebContext* svr);
+      void                 handleGetConfiguration(WebContext* svr);
+/**
+ *    Return hours (or minutes) parf of the String (+/-)HH:MM returned from the config form
+ */
+      static int           getHours(const String& s);
+      static int           getMinutes(const String& s);
 
 /**
  *   Macros to define the following Runtime and UPnP Type Info:
@@ -112,64 +121,17 @@ class SoftwareClock : public Sensor {
       DEFINE_RTTI;
       DERIVED_TYPE_CHECK(Sensor);
     
-    private:
+      static const char* MONTHS[12];
+
+    protected:
       GetDateTime     _getDateTime;
 
-      int             _tzOffset = DEFAULT_TIMEZONE;
+      SystemClock     _sysClock;  
 
 /**
- *    Static NTPTime used by all SoftwareClocks in synchronization with NTP
- *    Note that no synchronization is done since Arduino is not a multi-threaded environment.
- */
-      static NTPTime _ntp;
-      
-/**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(SoftwareClock);         
-};
-
-/** Timer class
- *  Measure elapsed time or trigger a unit of work after some interval. 
- *  Example:
- *  
- *  Timer t = Timer();
- *        t.set(0,0,15);        // Set an interval of 15 seconds
- *        t.setHandler([this]{  // Set up a callback to print current time and reset the timer
- *            SoftwareClock* c = (SoftwareClock*) searchDevice("LeelanauSoftware-com", "SoftwareClock","1");
- *            if( c != NULL ) {
- *               Serial.printf("Date is %s and Time is %s\n",c->getDate().c_str(),c->getTime().c_str());
- *               t.reset();
- *               t.start();
- *           }
- *           else Serial.printf("SoftwareClock NOT found!\n");
- *           });
- *        t.start();
- *
- */
-class Timer {
-  public:
-  Timer() {}
-  Timer( const Timer& t );
-
-  void          start()                        {_millis = millis();} 
-  bool          started()                      {return _millis != 0;}
-  void          reset()                        {_millis = 0;}
-  void          clear()                        {reset();_setPoint=0;}
-  void          set(int h, int m, int s)       {h=((h<0)?(0):(h));m=((m<0)?(0):(m));s=((s<0)?(0):(s));_setPoint = 1000*s + 60000*m + 3600000*h;}
-  void          set(unsigned long millis)      {_setPoint = millis;}
-  long          elapsedTimeMillis()            {return((_millis>0)?(millis() - _millis):(0));}
-  long          elapsedTimeSeconds()           {return elapsedTimeMillis()/1000;}
-  void          setHandler(CallbackFunction h) {if(h != NULL) _handler=h;}
-  unsigned long setPointMillis()               {return _setPoint;}
-  void          setPoint(int& h, int& m, int& s);
-  void          doDevice();
-  
-  private:
-  unsigned long      _millis   = 0;
-  unsigned long      _setPoint = 0;
-  CallbackFunction   _handler  = ([]{});
-     
 };
 
 } // End of namespace lsc

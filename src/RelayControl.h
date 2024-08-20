@@ -24,7 +24,7 @@
 #define RELAYCONTROL_H
 
 #include <CommonProgmem.h>
-#include <Control.h>
+#include "Control.h"
 #include "ControlServices.h"
 
 /** Leelanau Software Company namespace 
@@ -37,12 +37,14 @@ namespace lsc {
  *  RelayControl publishes a UPnPService for setting relay state (setState) as implemented by the member variable 
  *      SetStateService    _setStateSvc;
  *  Subclasses should provide:
- *      virtual void  content(WebContext* svr);    // From Control - displays the device based on RelayControl state
- *      virtual void  setState(WebContext* svr);   // HttpHandler for the set state service that retrieves arguments 
- *                                                    and sets RelayControl state
+ *      void  formatContent(WebContext* svr);    // From UPnPDevice - displays the device based on RelayControl state
+ *      void  setState(WebContext* svr);         // HttpHandler for the set state service that retrieves arguments 
+ *                                                  and sets RelayControl state
  *  The actual electronics for  ON/OFF are implemented in the method setControlState(ControlState)
  *  RelayControl relay uses WeMOS pin D5 (GPIO pin 14), but pin can be set via:
- *      void setPin(int pin);
+ *      void pin(int pin);
+ *  Note that the digital pin is initialized in setup() so pin definition must happen prior to setup() being called, either when setup() is called
+ *  on a RootDevice containing RelayControl, or RelayControl is added to the RootDevice after setup().
  *  Configuration support is provided by Control allowing  deviceName definition
  */
 
@@ -51,6 +53,7 @@ class RelayControl : public Control {
   public: 
       RelayControl();
       RelayControl( const char* target );
+      virtual ~RelayControl() {}
 
       virtual int     frameHeight()  {return 100;}                                                      // Frame height from Control
 
@@ -62,27 +65,27 @@ class RelayControl : public Control {
       
       boolean         isON()                      {return(getControlState() == ON);}                    // Returns TRUE if the relay is ON
       boolean         isOFF()                     {return(getControlState() == OFF);}                   // Returns TRUE if the relay is OFF
-      ControlState    getControlState()           {return((digitalRead(getPin()) == HIGH)?(ON):(OFF));} // Returns ControlState ON/OFF
+      ControlState    getControlState()           {return((digitalRead(pin()) == HIGH)?(ON):(OFF));}    // Returns ControlState ON/OFF
       const char*     controlState()              {return((isON())?("ON"):("OFF"));}                    // Returns char* representation of ControlState
 
 /**
  *    Relay Pin definition
  */
-      void            setPin(int pin)             {_pin = ((pin>=0)?((pin<17)?(pin):(16)):(0));}
-      int             getPin()                    {return _pin;}
+      void            pin(int pin)                {_pin=((pin>=0)?((pin<17)?(pin):(16)):(0));}        // Set pin number
+      int             pin()                       {return _pin;}                                        // Get pin number
 
 /**
  *    Display this Control
  */
-      void             content(char buffer[], int size);
+      int              formatContent(char buffer[], int size, int pos);
       void             setup(WebContext* svr);
  
 /**
  *  Set/Get/Check Logging Level. Logging Level can be NONE, WARNING, INFO, FINE, and FINEST
  */
-  void                 logging(LoggingLevel level)             {_logging = level;}
-  LoggingLevel         logging()                               {return _logging;}
-  boolean              loggingLevel(LoggingLevel level)        {return(logging() >= level);}
+      void                 logging(LoggingLevel level)             {_logging = level;}
+      LoggingLevel         logging()                               {return _logging;}
+      boolean              loggingLevel(LoggingLevel level)        {return(logging() >= level);}
 
 /**
  *   Macros to define the following Runtime and UPnP Type Info:
@@ -109,7 +112,7 @@ class RelayControl : public Control {
       LoggingLevel        _logging      = NONE;
       
 /**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(RelayControl);         
 

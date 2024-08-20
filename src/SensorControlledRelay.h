@@ -24,8 +24,6 @@
 #define SENSORCONTROLLEDRELAY_H
 
 #include "RelayControl.h"
-#include "SoftwareClock.h"
-#include "ControlServices.h"
 
 /** Leelanau Software Company namespace 
 *  
@@ -39,7 +37,7 @@ namespace lsc {
 
 /** SensorControlledRelay is a RelayControl that can be controlled by a Sensor. It uses the two relay states ON/OFF from 
  *  RelayControl and adds two modes, AUTOMATIC and MANUAL. In AUTOMATIC mode the device is controlled by the Sensor and
- *  it's configuration, and in MANUAL mode it is controlled by the state toggle (ON/OFF) from RelayControl. So, operation 
+ *  its configuration, and in MANUAL mode it is controlled by the state toggle (ON/OFF) from RelayControl. So, operation 
  *  is determined by two toggles, one for mode (AUTOMATIC/MANUAL) and one for state (ON/OFF). Tripping the state toggle 
  *  also trips the mode toggle.
  *  
@@ -73,6 +71,7 @@ class SensorControlledRelay : public RelayControl {
   public: 
       SensorControlledRelay();
       SensorControlledRelay( const char* target );
+      virtual ~SensorControlledRelay() {}
 
 /**
  *    Relay mode management
@@ -107,7 +106,7 @@ class SensorControlledRelay : public RelayControl {
 /**
  *    Display this Control
  */
-      void             content(char buffer[], int size);
+      int              formatContent(char buffer[], int size, int pos);
       void             setup(WebContext* svr);
 
 /**
@@ -152,7 +151,7 @@ class SensorControlledRelay : public RelayControl {
       Timer               _timer;
 
 /**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(SensorControlledRelay);         
 

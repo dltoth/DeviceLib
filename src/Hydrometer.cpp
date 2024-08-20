@@ -24,7 +24,8 @@
 
 namespace lsc {
 
-const char Hydrometer_body[]             PROGMEM = "<p align=\"center\"> Soil Moisture: %.1f%% <br> Sensor Reading: %d</p>";
+const char Hydrometer_body[]             PROGMEM = "<p align=\"center\" style=\"font-size:1.25em;\"> Soil Moisture: %.1f%% <br> Sensor Reading: %d</p>";
+const char Hydrometer_root_body[]        PROGMEM = "<p align=\"center\" style=\"font-size:1.1em;\"> Soil Moisture: %.1f%%</p>";
 const char Hydrometer_template[]         PROGMEM = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                                           "<Hydrometer>"
                                               "<soilMoisture>%f</soilMoisture>"
@@ -54,10 +55,8 @@ const char Hydrometer_config_form[]      PROGMEM = "<form action=\"%s\">"       
 /**
  *  Static RTT initialization
  */
-INITIALIZE_STATIC_TYPE(GetSoilMoisture);
-INITIALIZE_STATIC_TYPE(Hydrometer);
-INITIALIZE_UPnP_TYPE(GetSoilMoisture,urn:LeelanauSoftware-com:service:getSoilMoisture:1);
-INITIALIZE_UPnP_TYPE(Hydrometer,urn:LeelanauSoftware-com:device:Hydrometer:1);
+INITIALIZE_SERVICE_TYPES(GetSoilMoisture,LeelanauSoftware-com,getSoilMoisture,1.0.0);
+INITIALIZE_DEVICE_TYPES(Hydrometer,LeelanauSoftware-com,Hydrometer,1.0.0);
 
 GetSoilMoisture::GetSoilMoisture() : UPnPService("getSoilMoisture") {setDisplayName("Get Soil Moisture");};
 void GetSoilMoisture::handleRequest(WebContext* svr) {
@@ -78,17 +77,11 @@ void GetSoilMoisture::handleRequest(WebContext* svr) {
 Hydrometer::Hydrometer() : Sensor("hydrometer") {
   addServices(&_getSoilMoisture);
   setDisplayName("Hydrometer");
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setHydrometerConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getHydrometerConfiguration(svr);});
 }
 
 Hydrometer::Hydrometer(const char* target) : Sensor(target) {
   addServices(&_getSoilMoisture);
   setDisplayName("Hydrometer");
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setHydrometerConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getHydrometerConfiguration(svr);});
 }
 
 int Hydrometer::pin() {
@@ -101,10 +94,17 @@ void Hydrometer::pin(int p) {
   if(p >= 0) _pin = p;
 }
 
-void Hydrometer::content(char buffer[], int bufferSize) {
+int Hydrometer::formatContent(char buffer[], int size, int pos) {
   int ar = analogRead(A0);
   float sm = soilMoisture(ar);
-  snprintf_P(buffer,bufferSize,Hydrometer_body,sm,ar);  
+  pos = formatBuffer_P(buffer,size,pos,Hydrometer_body,sm,ar);  
+  return pos;
+}
+
+int Hydrometer::formatRootContent(char buffer[], int size, int pos) {
+  float sm = soilMoisture(analogRead(A0));
+  pos = formatBuffer_P(buffer,size,pos,Hydrometer_root_body,sm);  
+  return pos;
 }
 
 float Hydrometer::soilMoisture() {
@@ -173,7 +173,7 @@ void Hydrometer::displayForm(WebContext* svr, int dry, int wet) {
   char pathBuff[100];
   getPath(pathBuff,100);
   char svcPath[100];
-  setConfiguration()->getPath(svcPath,100);
+  setConfigurationSvc()->getPath(svcPath,100);
   pos = formatBuffer_P(buffer,size,pos,Hydrometer_config_form,svcPath,getDisplayName(),dry,dryPath,wet,wetPath,pathBuff);
 
 /**
@@ -183,7 +183,7 @@ void Hydrometer::displayForm(WebContext* svr, int dry, int wet) {
   svr->send(200,"text/html",buffer); 
 }
 
-void Hydrometer::setHydrometerConfiguration(WebContext* svr) {
+void Hydrometer::handleSetConfiguration(WebContext* svr) {
   int numArgs = svr->argCount();
   for( int i=0; i<numArgs; i++) {
      const String& argName = svr->argName(i);
@@ -201,7 +201,7 @@ void Hydrometer::setHydrometerConfiguration(WebContext* svr) {
   display(svr);  
 }
 
-void Hydrometer::getHydrometerConfiguration(WebContext* svr) {
+void Hydrometer::handleGetConfiguration(WebContext* svr) {
   Serial.printf("Hydrometer::getConfiguration: getConfiguration starting...\n");
   char buffer[1000];
   size_t bufferSize = sizeof(buffer);

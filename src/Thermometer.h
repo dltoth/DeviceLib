@@ -22,11 +22,8 @@
 
 #ifndef THERMOMETER_H
 #define THERMOMETER_H
-#include <SensorDevice.h>
+#include "SensorDevice.h"
 #include <DHTesp.h>
-
-#define CELCIUS    'C'
-#define FAHRENHEIT 'F'
 
 /** Leelanau Software Company namespace 
 *  
@@ -77,18 +74,19 @@ class Thermometer : public Sensor {
   public:
   Thermometer();
   Thermometer(const char* target);
+  virtual ~Thermometer() {}
 
 
   float           temp();
   float           hum();
-  void            setFahrenheit();
-  void            setCelcius();
-  char            unit();
   int             pin();
   void            pin(int p);
 
-  static boolean  isFahrenheit(char u) {return ((u==FAHRENHEIT)?(true):(false));}
-  static boolean  isCelcius(char u)    {return ((u==CELCIUS)?(true):(false));}
+  char            unit()               {return _unit;}
+  void            setFahrenheit()      {_unit = 'F';}
+  void            setCelcius()         {_unit = 'C';}
+  static boolean  isFahrenheit(char u) {return (((u=='F') || (u=='f'))?(true):(false));}
+  static boolean  isCelcius(char u)    {return (((u=='C') || (u=='c'))?(true):(false));}
   boolean         isFahrenheit()       {return isFahrenheit(_unit);}
   boolean         isCelcius()          {return isCelcius(_unit);}
   
@@ -100,14 +98,15 @@ class Thermometer : public Sensor {
 /**
  *   Required by Sensor
  */
-   void           content(char buffer[], int bufferSize);
+   int           formatContent(char buffer[], int bufferSize, int pos);
+   int           formatRootContent(char buffer[], int bufferSize, int pos);
 
 /**
  *   Configuration support
  */
    void           configForm(WebContext* svr);
-   void           setThermometerConfiguration(WebContext* svr);
-   void           getThermometerConfiguration(WebContext* svr);  
+   void           handleSetConfiguration(WebContext* svr);
+   void           handleGetConfiguration(WebContext* svr);  
 
 /**
  *   Macros to define the following Runtime Type Info:
@@ -123,10 +122,10 @@ class Thermometer : public Sensor {
   GetTempHum      _getTempHum;
   DHTesp          _dht;
   int             _pin = WEMOS_D2;        // Set pin to GPIO 4, or WeMOS D2
-  char            _unit = FAHRENHEIT;
+  char            _unit = 'F';
   
 /**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(Thermometer);         
 };

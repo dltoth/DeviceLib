@@ -24,7 +24,8 @@
 
 namespace lsc {
 
-const char TempHum_body[]                PROGMEM = "<p align=\"center\"> Temperature: %.1f %c<br> Humidity: %.1f%% </p>";
+const char TempHum_body[]                PROGMEM = "<p align=\"center\" style=\"font-size:1.25em;\"> Temperature: %.1f %c<br> Humidity: %.1f%% </p>";
+const char TempHum_root_body[]           PROGMEM = "<p align=\"center\" style=\"font-size:1.1em;\"> Temperature: %.1f %c</p>";
 const char TempHum_template[]            PROGMEM = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TempHum>"
                                                       "<temp>%f %c</temp>"
                                                       "<hum>%f</hum>"
@@ -38,7 +39,7 @@ const char Thermometer_config_form[]      PROGMEM = "<form action=\"%s\"><div al
             "<label for=\"displayName\">Sensor Name &nbsp &nbsp</label>"
             "<input type=\"text\" placeholder=\"%s\" name=\"displayName\"><br><br>"
             "<label for=\"unit\">Thermometer Unit &nbsp </label>"
-            "<input type=\"text\" name=\"unit\" pattern=\"[FC]{1}\" style=\"width:2.1em;font-size:1em\" maxlength=\"1\" placeholder=\"%c\"><br><br>"        
+            "<input type=\"text\" name=\"unit\" pattern=\"[FfCc]{1}\" style=\"width:2.1em;font-size:1em\" maxlength=\"1\" placeholder=\"%c\"><br><br>"        
             "<button class=\"fmButton\" type=\"submit\">Submit</button>&nbsp&nbsp"
             "<button class=\"fmButton\" type=\"button\" onclick=\"window.location.href=\'%s\';\">Cancel</button>"  // Cancel path
             "</div></form>";
@@ -46,10 +47,8 @@ const char Thermometer_config_form[]      PROGMEM = "<form action=\"%s\"><div al
 /**
  *  Static RTT initialization
  */
-INITIALIZE_STATIC_TYPE(GetTempHum);
-INITIALIZE_UPnP_TYPE(GetTempHum,urn:LeelanauSoftware-com:service:getTempHum:1);
-INITIALIZE_STATIC_TYPE(Thermometer);
-INITIALIZE_UPnP_TYPE(Thermometer,urn:LeelanauSoftware-com:device:Thermometer:1);
+INITIALIZE_SERVICE_TYPES(GetTempHum,LeelanauSoftware-com,getTempHum,1.0.0);
+INITIALIZE_DEVICE_TYPES(Thermometer,LeelanauSoftware-com,Thermometer,1.0.0);
 
 GetTempHum::GetTempHum() : UPnPService("getTempHum") {setDisplayName("Get Temperature/Humidity");};
 void GetTempHum::handleRequest(WebContext* svr) {
@@ -71,17 +70,12 @@ void GetTempHum::handleRequest(WebContext* svr) {
 Thermometer::Thermometer() : Sensor("thermometer") {
   addServices(&_getTempHum);
   setDisplayName("Thermometer");
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setThermometerConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getThermometerConfiguration(svr);});
 }
 
 Thermometer::Thermometer(const char* target) : Sensor(target) {
   addServices(&_getTempHum);
   setDisplayName("Thermometer");
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setThermometerConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getThermometerConfiguration(svr);});}
+}
 
 float Thermometer::temp() {
   float result = _dht.getTemperature();
@@ -102,17 +96,20 @@ int Thermometer::pin() {
  *  Must be between 2 and 8 inclusive
  */
 void Thermometer::pin(int p) {
-  _pin = ((p>1)?((p<9)?(p):(D2)):(D2));
+  _pin = ((p>1)?((p<9)?(p):(WEMOS_D2)):(WEMOS_D2));
 }
 
-char  Thermometer::unit() {return _unit;}
-void  Thermometer::setFahrenheit() {_unit = FAHRENHEIT;}
-void  Thermometer::setCelcius() {_unit = CELCIUS;}
-
-void Thermometer::content(char buffer[], int bufferSize) {
+int Thermometer::formatContent(char buffer[], int size, int pos) {
   float t = temp();
   float h = hum();
-  snprintf_P(buffer,bufferSize,TempHum_body,t,unit(),h);  
+  pos = formatBuffer_P(buffer,size,pos,TempHum_body,t,unit(),h); 
+  return pos; 
+}
+
+int Thermometer::formatRootContent(char buffer[], int size, int pos) {
+  float t = temp();
+  pos = formatBuffer_P(buffer,size,pos,TempHum_root_body,t,unit());
+  return pos; 
 }
 
 void Thermometer::configForm(WebContext* svr) {
@@ -130,7 +127,7 @@ void Thermometer::configForm(WebContext* svr) {
   char pathBuff[100];
   getPath(pathBuff,100);
   char svcPath[100];
-  setConfiguration()->getPath(svcPath,100);
+  setConfigurationSvc()->getPath(svcPath,100);
   pos = formatBuffer_P(buffer,size,pos,Thermometer_config_form,svcPath,getDisplayName(),unit(),pathBuff);
 
 /**
@@ -140,7 +137,7 @@ void Thermometer::configForm(WebContext* svr) {
   svr->send(200,"text/html",buffer); 
 }
 
-void Thermometer::setThermometerConfiguration(WebContext* svr) {
+void Thermometer::handleSetConfiguration(WebContext* svr) {
   int numArgs = svr->argCount();
   for( int i=0; i<numArgs; i++) {
      const String& argName = svr->argName(i);
@@ -154,7 +151,7 @@ void Thermometer::setThermometerConfiguration(WebContext* svr) {
   display(svr);  
 }
 
-void Thermometer::getThermometerConfiguration(WebContext* svr) {
+void Thermometer::handleGetConfiguration(WebContext* svr) {
   char buffer[1000];
   size_t bufferSize = sizeof(buffer);
   int size = bufferSize;

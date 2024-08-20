@@ -23,7 +23,7 @@
 #ifndef HUBDEVICE_H
 #define HUBDEVICE_H
 
-#include <ssdp.h>
+#include <UPnPLib.h>
 #include "ExtendedDevice.h"
 
 /** Leelanau Software Company namespace 
@@ -42,6 +42,7 @@ class HubDevice : public ExtendedDevice {
     public:
       HubDevice();
       HubDevice( const char* target );
+      virtual ~HubDevice() {}
 
       void          displayRoot(WebContext* svr);
 
@@ -71,7 +72,7 @@ class HubDevice : public ExtendedDevice {
       LoggingLevel         _logging = NONE;
 
 /**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(HubDevice);         
       

@@ -1,6 +1,6 @@
 /**
  * 
- *  DeviceLib Library
+ *  UPnPDevice Library
  *  Copyright (C) 2023  Daniel L Toth
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -20,11 +20,9 @@
  *
  */
 
-#ifndef EXTENDED_DEVICE_H
-#define EXTENDED_DEVICE_H
+#ifndef CONTROL_H
+#define CONTROL_H
 
-#include <WiFiPortal.h>
-#include <WiFiUdp.h>
 #include <UPnPLib.h>
 #include "ConfigurationServices.h"
 
@@ -32,42 +30,44 @@
 *  
 */
 namespace lsc {
-  
-/** ExtendedDevice is a Configurable RootDevice that provides SSDP Search capability for UPnPDevices on the
- *  same local network. Default configuration for ExtendedDevice allows for getting and setting display name, and resetting 
- *  the Access Point. This behavior can be overridden via the setHttpHandler method of the SetConfigurationSvc() 
- *  UPnPService. AccessPoint reset depends on use of the WiFiPortal library.
- *  
+
+/** A Control is a Configurable Device that provides its Control UI thru an iFrame. 
+ *  Configuration is provided by SetConfiguration and GetConfiguration UPnPServices
+ *  Implementation Notes:
+ *     1. formatContent should provide content for device display from the device target, and can be more complex than content displayed from the RootDevice
+ *     2. formatIFrameContent should provide content for device display from the root target, can be simpler than display content from the display target
+ *     3. formatRootContent inserts an iFrame into the RootDevice display buffer, target of the iFrame ultimately calls formatIFrameContent
  */
-class ExtendedDevice : public RootDevice {
-  
+class Control : public UPnPDevice  {
     public:
-      ExtendedDevice();
-      ExtendedDevice( const char* target );
-      virtual ~ExtendedDevice() {}
-
-
-      void               resetAP(WebContext* svr);
-      void               clearAP(WebContext* svr);
+      Control();
+      Control( const char* target);
+      virtual ~Control() {}
 
 /**
- *    Virtual display and setup
- */
-      void               display(WebContext* svr);
-      void               displayRoot(WebContext* svr);
-      void               setup(WebContext* svr);
+*   Root based url to the request handler for iFrame content display, registered with the Web server 
+*   at setup()
+*/
+      void               contentPath(char buffer[], size_t size);
 
-/**
- *  Subclasses of ExtendedDevice with complex configutation should provide implementation for the following virtual methods:
+/** 
+ *  Controls should implement the following methods for display of their Sensor reading:
+ *
+ *  int    formatContent(char buffer[], int size, int pos)             // HTML Displayed from device target, excluding document header, title, and tail; returns updated write pos
+ *  void   frameHeight();                                              // Height of iFrame (defaults to 75)
+ *  void   frameWidth();                                               // Width of iFrame (defaults to 300);
+ *    
+ *
+ *  
+ *  Controls with complex configutation should implement methods for the following
  *  
  *    configForm(WebContext* svr)              := Presents an HTML form for configuration input. Form submission
- *                                                ultimately calls handleSetConfiguration() on a (derived) ExtendedDevice. Default action only supplies a form 
- *                                                for setting diaplay name and re-homing network AP. Note: the form "action" attribute is supplied from 
- *                                                setConfigurationSvc()->getPath(). configForm() is set via setFormHandler() on ExtendedDevice's constructor 
- *                                                so is not necessary to set on subclasses.                                                
+ *                                                ultimately calls handleSetConfiguration() on a (derived) Control. Default action only supplies a form 
+ *                                                for setting diaplay name. Note: the form "action" attribute is supplied from setConfigurationSvc()->getPath().
+ *                                                configForm() is set via setFormHandler() on Control's constructor so is not necessary to set on derived Controls.                                                
  *    handleSetConfiguration(WebContext* svr)  := Request handler for form submission; called from the UPnPService SetConfiguration::handleRequest(). 
- *                                                Default action only sets display name and re-homing network AP. handleSetConfiguration() is set via setHttpHandler()  
- *                                                ExtendedDevice's constructor. 
+ *                                                Default action only sets display name. handleSetConfiguration() is set via setHttpHandler() on 
+ *                                                Control's constructor. 
  *    handleGetConfiguration(WebContext* svr)  := Request handler that replies with an XML document describing configuration;
  *                                                called from the UPnPService GetConfiguration::handleRequest(). There is no formal schema for this document 
  *                                                but must start with XML header:
@@ -75,19 +75,25 @@ class ExtendedDevice : public RootDevice {
  *                                                And must include: 
  *                                                    <config><displayName>display name</displayName>...</config>                      
  *                                                Default action only supplies the displayName attribute. handleGetConfiguration() is set via setHttpHandler() on 
- *                                                ExtendedDevice's constructor.
+ *                                                Control's constructor.
  */
+      int                formatRootContent(char buffer[], int size, int pos);       // Inserts iFrame into RootDeviceDisplay
+      virtual int        frameHeight()      {return 75;}
+      virtual int        frameWidth()       {return 300;}
+      
       SetConfiguration*  setConfigurationSvc()                     {return &_setConfiguration;}                        // Return setConfigutation Service
       GetConfiguration*  getConfigurationSvc()                     {return &_getConfiguration;}                        // Return getConfigutation Service
       virtual void       handleSetConfiguration(WebContext* svr)   {_setConfiguration.handleSetConfiguration(svr);}    // Default form (submit) handler for set configuration
       virtual void       handleGetConfiguration(WebContext* svr)   {_getConfiguration.handleGetConfiguration(svr);}    // Default HTTP handler for get configuration
-      virtual void       configForm(WebContext* svr);
+      virtual void       configForm(WebContext* svr)               {_setConfiguration.configForm(svr);}                // Default form display for set configuration
+      void               setup(WebContext* svr);
 
 /**
- *    Use UPnP SSDP protocol to search for nearby RootDevices enabled with SSDP.
- *    Responds with a Web Page of RootDevice buttons
+ *   Display Control content, intended for the endpoint of an iFrame link and
+ *   when the Control refreshes its display. Content is supplied thru formatIFrameContent()
  */
-      virtual void    nearbyDevices(WebContext* svr);
+      virtual void       displayControl(WebContext* svr);
+      void               display(WebContext* svr);
 
 /**
  *   Macros to define the following Runtime and UPnP Type Info:
@@ -101,21 +107,18 @@ class ExtendedDevice : public RootDevice {
  *     public:  virtual boolean         isType(const char* t)       
  */
       DEFINE_RTTI;
-      DERIVED_TYPE_CHECK(RootDevice);
+      DERIVED_TYPE_CHECK(UPnPDevice);
 
 /**
  *   Copy construction and assignment are not allowed
  */
-      DEFINE_EXCLUSIONS(ExtendedDevice);         
+     DEFINE_EXCLUSIONS(Control);         
 
       private:
       GetConfiguration     _getConfiguration;
       SetConfiguration     _setConfiguration;
-
 };
 
 } // End of namespace lsc
 
-
-
-#endif
+ #endif

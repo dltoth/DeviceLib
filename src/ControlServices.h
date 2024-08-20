@@ -23,7 +23,7 @@
 #ifndef CONTROLSERVISES_H
 #define CONTROLSERVISES_H
 
-#include <UPnPService.h>
+#include <UPnPLib.h>
 
 /** Leelanau Software Company namespace 
 *  
@@ -34,6 +34,7 @@ class SetStateService : public UPnPService {
   public:
     SetStateService() :  UPnPService("setState") {setDisplayName("Set State");};
     SetStateService(const char* target) : UPnPService(target) {setDisplayName("Set State");};
+    virtual ~SetStateService() {}
 
     DEFINE_RTTI;
     DERIVED_TYPE_CHECK(UPnPService);
@@ -48,12 +49,13 @@ class SetModeService : public UPnPService {
   public:
     SetModeService() :  UPnPService("setMode") {setDisplayName("Set Mode");};
     SetModeService(const char* target) : UPnPService(target) {setDisplayName("Set Mode");};
+    virtual ~SetModeService() {}
 
     DEFINE_RTTI;
     DERIVED_TYPE_CHECK(UPnPService);
 
 /**
- *   Copy construction and destruction are not allowed
+ *   Copy construction and assignment are not allowed
  */
      DEFINE_EXCLUSIONS(SetModeService);         
 };

@@ -1,6 +1,6 @@
 /**
  * 
- *  DeviceLib Library
+ *  UPnPDevice Library
  *  Copyright (C) 2023  Daniel L Toth
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -20,13 +20,22 @@
  *
  */
 
+#ifndef DEVICELIB_H
+#define DEVICELIB_H
+#include "SensorDevice.h"
+#include "Control.h"
+#include "ConfigurationServices.h"
 #include "ControlServices.h"
+#include "SensorControlledRelay.h"
+#include "OutletTimer.h"
+#include "HumidityFan.h"
+#include "HubDevice.h"
+#include "Thermometer.h"
+#include "SoftwareClock.h"
+#include "RelayControl.h"
+#include "Hydrometer.h"
+#include "ExtendedDevice.h"
 
-namespace lsc {
-INITIALIZE_SERVICE_TYPES(SetStateService,LeelanauSoftware-com,setState,1.0.0);
-}
+using namespace lsc;
 
-namespace lsc {
-INITIALIZE_SERVICE_TYPES(SetModeService,LeelanauSoftware-com,setMode,1.0.0);
-}
-
+#endif

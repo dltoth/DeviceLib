@@ -27,8 +27,8 @@
 */
 namespace lsc {
 
-const char threshold_setting[] PROGMEM = "<br><div align=\"center\">Threshold Set To %d%%</div>";
-const char humidity_display[]  PROGMEM = "<br><div align=\"center\">Humidity is %.1f%%</div>";
+const char threshold_setting[] PROGMEM = "<div align=\"center\">Threshold Set To %d%%</div>";
+const char humidity_display[]  PROGMEM = "<div align=\"center\">Humidity is %.1f%%</div>";
 
 /**
  *    Variable input to form is service action url, display name placeholder, threshold placeholder, cancel url
@@ -50,38 +50,23 @@ const char HumidityFan_config_template[]  PROGMEM = "<?xml version=\"1.0\" encod
                                                       "</config>";
 
 /**
- *  Static RTT initialization
+ *  Static RTT and UPnP Type initialization
  */
-INITIALIZE_STATIC_TYPE(HumidityFan);
-INITIALIZE_UPnP_TYPE(HumidityFan,urn:LeelanauSoftware-com:device:HumidityFan:1);
+INITIALIZE_DEVICE_TYPES(HumidityFan,LeelanauSoftware-com,HumidityFan,1.0.0);
 
 HumidityFan::HumidityFan() : SensorControlledRelay("humidityFan") {
   setDisplayName("Humidity Fan");
-  
-/**
- *   Setup Configuration handlers
- */
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setHumidityFanConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getHumidityFanConfiguration(svr);});
-}
+  }
 
 HumidityFan::HumidityFan(const char* target) : SensorControlledRelay(target) {
   setDisplayName("Humidity Fan");
-
-/**
- *   Setup Configuration handlers
- */
-  setConfiguration()->setHttpHandler([this](WebContext* svr){this->setHumidityFanConfiguration(svr);});
-  setConfiguration()->setFormHandler([this](WebContext* svr){this->configForm(svr);});
-  getConfiguration()->setHttpHandler([this](WebContext* svr){this->getHumidityFanConfiguration(svr);});
 }
 
-void  HumidityFan::content(char buffer[], int size) {  
-  SensorControlledRelay::content(buffer,size);
-  int pos = strlen(buffer);  
-//  pos = formatBuffer_P(buffer,size,pos,humidity_display,humidity());         
-  if( isAUTOMATIC() )  pos = formatBuffer_P(buffer,size,pos,threshold_setting,threshold());       
+int  HumidityFan::formatContent(char buffer[], int size, int pos) { 
+  pos = SensorControlledRelay::formatContent(buffer,size,pos);
+  pos =  formatBuffer_P(buffer,size,pos,humidity_display,humidity());
+  if( isAUTOMATIC() )  pos = formatBuffer_P(buffer,size,pos,threshold_setting,threshold()); 
+  return pos;     
 }
 
 /**
@@ -113,8 +98,7 @@ void HumidityFan::configForm(WebContext* svr) {
   char pathBuff[100];
   getPath(pathBuff,100);
   char svcPath[100];
-  setConfiguration()->getPath(svcPath,100);
-  
+  setConfigurationSvc()->getPath(svcPath,100);
   pos = formatBuffer_P(buffer,size,pos,HumidityFan_config_form,svcPath,getDisplayName(),threshold(),humidity(),pathBuff);
 
 /**
@@ -124,7 +108,7 @@ void HumidityFan::configForm(WebContext* svr) {
   svr->send(200,"text/html",buffer); 
 }
 
-void HumidityFan::setHumidityFanConfiguration(WebContext* svr) {
+void HumidityFan::handleSetConfiguration(WebContext* svr) {
   int numArgs = svr->argCount();
   for( int i=0; i<numArgs; i++) {
      const String& argName = svr->argName(i);
@@ -138,7 +122,7 @@ void HumidityFan::setHumidityFanConfiguration(WebContext* svr) {
   display(svr);  
 }
 
-void HumidityFan::getHumidityFanConfiguration(WebContext* svr) {
+void HumidityFan::handleGetConfiguration(WebContext* svr) {
   char buffer[1000];
   size_t bufferSize = sizeof(buffer);
   int size = bufferSize;

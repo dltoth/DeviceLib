@@ -42,8 +42,7 @@ const char brk_html[]                   PROGMEM = "<br><brk>";
  *  Static RTT initialization
  */
  
-INITIALIZE_STATIC_TYPE(HubDevice);
-INITIALIZE_UPnP_TYPE(HubDevice,urn:LeelanauSoftware-com:device:HubDevice:1);
+INITIALIZE_DEVICE_TYPES(HubDevice,LeelanauSoftware-com,HubDevice,1.0.0);
 
 HubDevice::HubDevice() : ExtendedDevice("hub") {
   setDisplayName("Device Hub");
@@ -82,14 +81,12 @@ void HubDevice::displayRoot(WebContext* svr) {
     }),WiFi.localIP());
 
   pos = formatBuffer_P(buffer,size,pos,brk_html);
-  formatContent(buffer+pos,size-pos);
-  pos = strlen(buffer);
+  pos = formatRootContent(buffer,size,pos);
 
 /** Add the HTML tail
  */ 
   formatTail(buffer,size,pos);
   svr->send(200,"text/html",buffer);
-  Serial.printf("Sending %d bytes of %d\n",strlen(buffer),DISPLAY_SIZE);
 }
 
 } // End of namespace lsc
