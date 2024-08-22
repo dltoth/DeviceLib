@@ -31,6 +31,16 @@
 */
 namespace lsc {
 
+  typedef enum ControlMode {
+    AUTOMATIC,
+    MANUAL
+  } ControlMode;
+
+  typedef enum ControlState {
+    ON,
+    OFF
+  } ControlState;
+
 /** A Control is a Configurable Device that provides its Control UI thru an iFrame. 
  *  Configuration is provided by SetConfiguration and GetConfiguration UPnPServices
  *  Implementation Notes:
