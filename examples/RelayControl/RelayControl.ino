@@ -20,7 +20,6 @@ using namespace lsc;
 #endif
 
 WebContext       ctx;
-WebContext*      svr = &ctx;
 WiFiPortal       portal;
 
 SSDP             ssdp;
@@ -103,7 +102,7 @@ void setup() {
 /**
  *  Register HTTP handlers based on device target and setup any embedded devices or services added at this point
  */
-  root.setup(svr);
+  root.setup(&ctx);
 
 /**
  *  Initialize SSDP services
