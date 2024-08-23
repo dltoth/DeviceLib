@@ -3,11 +3,7 @@
  *  Conditional Compilation for both ESP8266 and ESP32.
  */
 
-#include <ExtendedDevice.h>
-#include <RelayControl.h>
-#include <ssdp.h>
-#include <SoftwareClock.h>
-#include <WiFiPortal.h>
+#include <DeviceLib.h>
 
 using namespace lsc;
 
@@ -81,6 +77,12 @@ void setup() {
   Serial.printf("\nWiFi Connected to %s with IP address: %s\n",WiFi.SSID().c_str(),WiFi.localIP().toString().c_str());
 
 /**
+ *  Setup Web Context for serving the HTML UI, must be done prior to root setup
+ */
+  ctx.begin(SERVER_PORT);
+  Serial.printf("Web Server started on %s:%d/\n",WiFi.localIP().toString().c_str(),ctx.getLocalPort());
+
+/**
  *  Set timezone to Eastern Daylight Time
  */
   c.setTimezone(-5);
@@ -92,22 +94,22 @@ void setup() {
   relay.setDisplayName("Smart Outlet");
 
 /**
+ *  root.setup() will register HTTP handlers based on target, so setTarget() must always be called prior to setup(), 
+ *  otherwise a default target will be used.
+ */
+  root.setTarget("device");
+  relay.setTarget("relay");
+
+/**
+ *  Register HTTP handlers based on device target and setup any embedded devices or services added at this point
+ */
+  root.setup(svr);
+
+/**
  *  Initialize SSDP services
  */
   ssdp.begin(&root);
   ssdp.logging(WARNING);
-
-/**
- * Setup Web Context for serving the HTML UI. 
- */
-  ctx.begin(SERVER_PORT);
-  Serial.printf("Web Server started on %s:%d/\n",WiFi.localIP().toString().c_str(),ctx.getLocalPort());
-
-/**
- * setup() will register HTTP handlers based on target, so setTarget() must always be called prior to setup(), otherwise default target will be used.
- */
-  root.setTarget("device");
-  root.setup(svr);
 
 /**
  *  Late binding for embedded devices; setup will be called for each device as  
