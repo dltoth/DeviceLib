@@ -1,5 +1,5 @@
 # DeviceLib
-DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPDevice) based on the [UPnP Device Architecture](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf) for ESP8266 and ESP32. Use of this library requires the companion libraries [CommonUtil](https://github.com/dltoth/CommonUtil) for user interface, [UPnPDevice](https://github.com/dltoth/UPnPDevice) for device architecture, [ssdp](https://github.com/dltoth/ssdp) for service discovery, and [WiFiPortal](https://github.com/dltoth/WiFiPortal) for access point configuration. 
+DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPLib) based on the [UPnP Device Architecture](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf) for ESP8266 and ESP32. Use of this library requires the companion libraries [CommonUtil](https://github.com/dltoth/CommonUtil) for user interface, [UPnPLib](https://github.com/dltoth/UPnPLib) for device architecture, [SystemClock](https://github.com/dltoth/SystemClock) for NTP synchronized time, and [WiFiPortal](https://github.com/dltoth/WiFiPortal) for access point configuration. 
 
 DeviceLib includes the following classes:
 
@@ -22,6 +22,8 @@ DeviceLib includes the following classes:
 
 The library is centered around the two base classes [Sensor](https://github.com/dltoth/DeviceLib/blob/main/src/SensorDevice.h), a configurable UPnPDevice with simple HTML display, and [Control](https://github.com/dltoth/DeviceLib/blob/main/src/Control.h), a configurable UPnPDevice with complex HTML display. It also includes a turn-key Device Hub, [HubDevice](https://github.com/dltoth/DeviceLib/blob/main/src/HubDevice.h), that can be included in a boilerplate sketch to provide access to all UPnPRootDevices on a local network.
 
+For a detailed review of UPnPDevice development, see [documentation for UPnPLib](https://github.com/dltoth/UPnPLib).
+
 ## Basic Usage
 
 To see how this works, consider a [simple sketch](https://github.com/dltoth/DeviceLib/blob/main/examples/RelayControl/RelayControl.ino) consisting of an [ExtendedDevice](https://github.com/dltoth/DeviceLib/blob/main/src/ExtendedDevice.h) with a Control ([RelayControl](https://github.com/dltoth/DeviceLib/blob/main/src/RelayControl.h)), and Sensor ([SoftwareClock](https://github.com/dltoth/DeviceLib/blob/main/src/SoftwareClock.h)). The sketch will not be reviewed in detail but notice device instantiation is as follows:
@@ -34,11 +36,35 @@ RelayControl     relay;
 const char*      deviceName = "Outlet";
 ```
 
-SSDP is used for Service discovery, ExtendedDevice is used as the RootDevice container to provide configuration and Device search, and RootDevice display name will be "Outlet". No, flash an ESP device with the sketch above, start it up and point a browser to the device IP address.
+SSDP is used for Service discovery, ExtendedDevice is used as the RootDevice container to provide configuration and Device search, and RootDevice display name will be "Outlet". 
+
+Next review device configuration:
+
+```
+/**
+ *  Set timezone to Eastern Daylight Time
+ */
+  c.setTimezone(-5);
+
+/**
+ *  Set client display name to something recognizable from "Nearby Devices".
+ */
+  root.setDisplayName(deviceName);
+  relay.setDisplayName("Smart Outlet");
+
+/**
+ *  root.setup() will register HTTP handlers based on target, so setTarget() must always be called prior to setup(), 
+ *  otherwise a default target will be used.
+ */
+  root.setTarget("device");
+  relay.setTarget("relay");
+```
+
+Now, flash an ESP device with the sketch above, start it up and point a browser to the device IP address.
 
 *Figure 1 - RelayControl display at http://device-IP:80*
 
-![image1](/assets/image1.png)
+![image1](https://github.com/dltoth/DeviceLib/blob/main/assets/image1.png)
 
 
 
