@@ -60,11 +60,42 @@ Next review device configuration:
   relay.setTarget("relay");
 ```
 
-Now, flash an ESP device with the sketch above, start it up and point a browser to the device IP address.
+Timezone on the SoftwareClock is set to EST (-5), display name for ``root`` is set to <b><i>Outlet</i></b> and ``relay`` is set to <b><i>Smart Outlet</i></b>, and targets are set to <b><i>device</i></b> and <b><i>relay</i></b> respectively. Device targets define the HTTP URL for diplay as shown below.
+
+Now, flash an ESP device with the sketch above, start it up and point a browser to the device IP address. 
 
 *Figure 1 - RelayControl display at http://device-IP:80*
 
-![image1](https://github.com/dltoth/DeviceLib/blob/main/assets/image1.png)
+![image1](./assets/image1.png)
+
+Notice that device display is in the order that devices were added to the RootDevice:
+
+```
+root.addDevices(&relay,&c);
+```
+
+where RelayControl is at the top of the page just below the RootDevice display name <i>Outlet</i>, and Software clock is below that just above the <b><i>This Device</i></b> button. RelayControl is displayed in an iFrame whose title is the device display name <i>Smart Outlet</i>, and consists of a toggle and text.
+
+<b><i>Important Note:</i></b>
+
+Sensor and Control display are governed by implementation of the methods
+
+```
+    int formatContent(char buffer[], int size, int pos);       // Format content as displayed at the device target, return updated write position
+    int formatRootContent(char buffer[], int size, int pos);   // Format content as displayed at the root device target, return updated write position
+
+```
+In RootDevice display, ``formatRootContent(...)`` is called to provide HTML for an iFrame for a Control, or a single line of HTML for a Sensor reading. In UPnPDevice display, the method `formatContent(...)` is called to provide HTML for the device display.
+
+Now, select the <b><i>This Device</b></i> button.
+
+*Figure 2 - RelayControl display at http://device-IP:80/device*
+
+![image1](./assets/image2.png)
+
+The display now consists of a button for each embedded device (RelayControl and SoftwareClock), and a <b><i>Configure</b></i> button. Selecting each will bring up the display for the specific device, and selecting <b><i>Configure</b></i> will bring up the RootDevice configuration page.
+
+
 
 
 
