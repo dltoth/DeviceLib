@@ -1,5 +1,5 @@
 # DeviceLib
-DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPLib) based on the [UPnP Device Architecture](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf) for ESP8266 and ESP32. Use of this library requires the companion libraries [CommonUtil](https://github.com/dltoth/CommonUtil) for user interface, [UPnPLib](https://github.com/dltoth/UPnPLib) for device architecture, [SystemClock](https://github.com/dltoth/SystemClock) for NTP synchronized time, and [WiFiPortal](https://github.com/dltoth/WiFiPortal) for access point configuration. 
+DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPLib) for ESP8266 and ESP32, based on the [UPnP Device Architecture](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf). Use of this library requires the companion libraries [CommonUtil](https://github.com/dltoth/CommonUtil) for user interface, [UPnPLib](https://github.com/dltoth/UPnPLib) for device architecture and service discovery, [SystemClock](https://github.com/dltoth/SystemClock) for NTP synchronized time, and [WiFiPortal](https://github.com/dltoth/WiFiPortal) for access point configuration. 
 
 DeviceLib includes the following classes:
 
@@ -60,7 +60,7 @@ Next review device configuration:
   relay.setTarget("relay");
 ```
 
-Timezone on the SoftwareClock is set to EST (-5), display name for ``root`` is set to <b><i>Outlet</i></b> and ``relay`` is set to <b><i>Smart Outlet</i></b>, and targets are set to <b><i>device</i></b> and <b><i>relay</i></b> respectively. Device targets define the HTTP URL for diplay as shown below.
+Timezone on the SoftwareClock is set to EST (-5), display name for ``root`` is set to <b><i>Outlet</i></b> and ``relay`` is set to <b><i>Smart Outlet</i></b>, and targets are set to <b><i>device</i></b> and <b><i>relay</i></b> respectively. Device targets define the HTTP URL for display as shown below.
 
 Now, flash an ESP device with the sketch above, start it up and point a browser to the device IP address. 
 
@@ -85,15 +85,25 @@ Sensor and Control display are governed by implementation of the methods
     int formatRootContent(char buffer[], int size, int pos);   // Format content as displayed at the root device target, return updated write position
 
 ```
+
 In RootDevice display, ``formatRootContent(...)`` is called to provide HTML for an iFrame for a Control, or a single line of HTML for a Sensor reading. In UPnPDevice display, the method `formatContent(...)` is called to provide HTML for the device display.
 
 Now, select the <b><i>This Device</b></i> button.
 
 *Figure 2 - RelayControl display at http://device-IP:80/device*
 
-![image1](./assets/image2.png)
+![image2](./assets/image2.png)
 
-The display now consists of a button for each embedded device (RelayControl and SoftwareClock), and a <b><i>Configure</b></i> button. Selecting each will bring up the display for the specific device, and selecting <b><i>Configure</b></i> will bring up the RootDevice configuration page.
+In general, RootDevice will display at <i>http://device-IP:80/root-target</i>, in this case <i>root-target</i> has been set to <i>device</i>. Display for a RootDevice consists of a button for each embedded device in the order they were added, and a <i>Configure</i> button. In this example there are buttons for ``RelayControl`` and ``SoftwareClock``, each labeled with their display name. Selecting either will bring up the display for the specific device, and selecting <i>Configure</i> will bring up the RootDevice configuration page.
+
+Now, select the <b><i>Software Clock</i></b> button.
+
+*Figure 3 - RelayControl display at http://device-IP:80/device/clock*
+
+![image3](./assets/image3.png)
+
+
+
 
 
 
