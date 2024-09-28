@@ -26,7 +26,7 @@ For a detailed review of UPnPDevice development, see [documentation for UPnPLib]
 
 ## Basic Usage
 
-To see how this works, consider a [simple sketch](https://github.com/dltoth/DeviceLib/blob/main/examples/RelayControl/RelayControl.ino) consisting of an [ExtendedDevice](https://github.com/dltoth/DeviceLib/blob/main/src/ExtendedDevice.h) with a Control ([RelayControl](https://github.com/dltoth/DeviceLib/blob/main/src/RelayControl.h)), and Sensor ([SoftwareClock](https://github.com/dltoth/DeviceLib/blob/main/src/SoftwareClock.h)). The sketch will not be reviewed in detail but notice device instantiation is as follows:
+To see how this works, consider a [simple sketch](https://github.com/dltoth/DeviceLib/blob/main/examples/RelayControl/RelayControl.ino) consisting of an [ExtendedDevice](https://github.com/dltoth/DeviceLib/blob/main/src/ExtendedDevice.h) with a Control ([RelayControl](https://github.com/dltoth/DeviceLib/blob/main/src/RelayControl.h)), and Sensor ([SoftwareClock](https://github.com/dltoth/DeviceLib/blob/main/src/SoftwareClock.h)). First notice devices are instantiated in global scope above the <i>setup()</i> routine as follows:
 
 ```
 SSDP             ssdp;
@@ -36,7 +36,7 @@ RelayControl     relay;
 const char*      deviceName = "Outlet";
 ```
 
-SSDP is used for Service discovery, ExtendedDevice is used as the RootDevice container to provide configuration and Device search, and RootDevice display name will be "Outlet". 
+<i>SSDP</i> is used for Service discovery, <i>ExtendedDevice</i> is used as the <i>RootDevice</i> container which includes configuration and device search, <i>SoftwareClock</i> and <i>RelayControl</i> are embedded devices, and the <i>RootDevice</i> display name will be "Outlet". 
 
 Next review device configuration:
 
@@ -44,7 +44,7 @@ Next review device configuration:
 /**
  *  Set timezone to Eastern Daylight Time
  */
-  c.setTimezone(-5);
+  c.setTimezone(-5.0);
 
 /**
  *  Set client display name to something recognizable from "Nearby Devices".
@@ -60,7 +60,32 @@ Next review device configuration:
   relay.setTarget("relay");
 ```
 
-Timezone on the SoftwareClock is set to EST (-5), display name for ``root`` is set to <b><i>Outlet</i></b> and ``relay`` is set to <b><i>Smart Outlet</i></b>, and targets are set to <b><i>device</i></b> and <b><i>relay</i></b> respectively. Device targets define the HTTP URL for display as shown below.
+Timezone on the SoftwareClock is set to EST (-5.0), display name for ``root`` is set to "Outlet" and ``relay`` is set to "Smart Outlet", and targets are set to <b><i>device</i></b> and <b><i>relay</i></b> respectively. Device targets define the HTTP URL for display as shown below.
+
+Also note the last line of code in the <i>setup()</i> function ``UPnPDevice::printInfo(&root);`` will print the UPnPDevice hierarchy to the Serial monitor.
+
+Lastly, see the ``loop()`` function:
+
+```
+
+/**
+ *  Do a unit of work for the device
+ */
+  root.doDevice();
+
+/**
+ *  Handle SSDP queries
+ */
+  ssdp.doSSDP();
+
+/**
+ *  Handle HTTP requests
+ */
+  ctx.handleClient();
+
+```
+
+The ``RootDevice::doDevice()`` method handles any workload indented for the <i>RootDevice</i> or any of its embedded devices, the ``SSDP::doSSDP()`` method handles all request/response for SSDP queries, ``WebContext::handleClient()`` is proxy for the WebServer <i>handleClient()</i> method.
 
 Now, flash an ESP device with the sketch above, start it up and point a browser to the device IP address. 
 
@@ -71,14 +96,112 @@ Now, flash an ESP device with the sketch above, start it up and point a browser 
 Notice that device display is in the order that devices were added to the RootDevice:
 
 ```
-root.addDevices(&relay,&c);
+  root.addDevices(&relay,&c);
 ```
 
-where RelayControl is at the top of the page just below the RootDevice display name <i>Outlet</i>, and Software clock is below that just above the <b><i>This Device</i></b> button. RelayControl is displayed in an iFrame whose title is the device display name <i>Smart Outlet</i>, and consists of a toggle and text.
+where <i>RelayControl</i> is at the top of the page just below the <i>RootDevice</i> display name "Outlet", and <i>SoftwareClock</i> is below that just above the <b><i>This Device</i></b> button. <i>RelayControl</i> is displayed in an iFrame whose title is the device display name "Smart Outlet", and consists of a toggle and text.
 
-<b><i>Important Note:</i></b>
+Selecting the <b><i>This Device</b></i> button displays all of the <i>RootDevice</i> embedded devices as selectable buttons in the order they were added, the same as the page displayed at <i>http://device-IP:80/device</i>.
 
-Sensor and Control display are governed by implementation of the methods
+*Figure 2 - RelayControl display at http://device-IP:80/device*
+
+![image2](./assets/image2.png)
+
+So a <i>RootDevice</i> displays its embedded devices at <i>http://device-IP:80/root-target</i>, as a list of buttons, one for each embedded device in the order they were added, along with a <i>Configure</i> button. In this example there are buttons for ``RelayControl`` and ``SoftwareClock``, each labeled with their display name. Selecting either will bring up the display for the specific device, and selecting <i>Configure</i> will bring up the <i>RootDevice</i> configuration page. Embedded devices are displayed at <i>http://device-IP:80/root-target/device-target</i>.
+
+Now, select the <b><i>Software Clock</i></b> button.
+
+*Figure 3 - RelayControl display at http://device-IP:80/device/clock*
+
+![image3](./assets/image3.png)
+
+<b><i>Important Note:</i></b> The default target for <i>SoftwareClock</i> is <b><i>clock</b></i> (defined in its constructor), so if multiple SoftwareClocks are required in a device, each MUST be given a unique target using: 
+
+```
+  SoftwareClock::setTarget(const char*)
+```
+
+Also, note the difference between <i>SoftwareClock</i> display at <i>http://device-IP:80</i>, where display consists of a single line of HTML, and <i>SoftwareClock</i> display at <i>http://device-IP:80/device/clock</i> where display consists of multiple lines of HTML. That difference is driven by implementation of the ``formatContent(...)`` and ``formatRootContent(...)`` methods as discussed in the custom Sensor example below.
+
+Lastly, notice the Serial monitor output:
+
+```
+RootDevice Outlet:
+   UUID: b7d7a4db-5c83-4b5c-b89f-7fc56fdeb9b5
+   Type: urn:LeelanauSoftware-com:device:ExtendedDevice:1.0.0
+   Location is http://192.168.1.30:80/device
+   Outlet Services:
+      Get Configuration:
+         Type: urn:LeelanauSoftware-com:service:getConfiguration:1.0.0
+         Location is http://192.168.1.30:80/device/getConfiguration
+      Set Configuration:
+         Type: urn:LeelanauSoftware-com:service:setConfiguration:1.0.0
+         Location is http://192.168.1.30:80/device/setConfiguration
+Outlet Devices:
+Smart Outlet:
+   UUID: 22b6aabb-17a3-45c7-9b2d-6140676bf1a9
+   Type: urn:LeelanauSoftware-com:device:RelayControl:1.0.0
+   Location is http://192.168.1.30:80/device/relay
+   Smart Outlet Services:
+      Get Configuration:
+         Type: urn:LeelanauSoftware-com:service:getConfiguration:1.0.0
+         Location is http://192.168.1.30:80/device/relay/getConfiguration
+      Set Configuration:
+         Type: urn:LeelanauSoftware-com:service:setConfiguration:1.0.0
+         Location is http://192.168.1.30:80/device/relay/setConfiguration
+      Set State:
+         Type: urn:LeelanauSoftware-com:service:setState:1.0.0
+         Location is http://192.168.1.30:80/device/relay/setState
+Software Clock:
+   UUID: adc739a7-75b6-419a-98fe-466c3e6b14a9
+   Type: urn:LeelanauSoftware-com:device:SoftwareClock:2.1.1
+   Location is http://192.168.1.30:80/device/clock
+   Software Clock Services:
+      Get Configuration:
+         Type: urn:LeelanauSoftware-com:service:getConfiguration:1.0.0
+         Location is http://192.168.1.30:80/device/clock/getConfiguration
+      Set Configuration:
+         Type: urn:LeelanauSoftware-com:service:setConfiguration:1.0.0
+         Location is http://192.168.1.30:80/device/clock/setConfiguration
+      Get Date/Time:
+         Type: urn:LeelanauSoftware-com:service:getDateTime:1.0.0
+         Location is http://192.168.1.30:80/device/clock/getDateTime
+```
+
+First notice that the loacation of the <i>RootDevice</i> and embedded devices are as discussed above. Also note that <i>ExtendedDevice</i> has standard <i>GetConfiguration</i> and <i>SetConfiguration</i> <i>UPnPServices</i>, as do <i>Sensor</i> and <i>Control</i>, and that <i>RelayControl</i> has a <i>SetState</i> service and <i>SoftwareClock</i> has a <i>GetDateTime</i> service. Configuration and <i>UPnPServices</i> are discussed further below.
+
+
+## Creating a Custom Sensor
+
+A <i>Sensor</i> is a simple device that provides a reading, like temperature or moisture content, and supplies its display in minimal HTML, ideally a single line. A custom <i>Sensor</i> will derive from the [Sensor](https://github.com/dltoth/DeviceLib/blob/main/src/SensorDevice.h) class.  As an example, consider a custom clock that provides current time as the sensor reading. See the class definition for [CustomClock](https://github.com/dltoth/DeviceLib/blob/main/examples/RelayControl/CustomClock.h) and note the following:
+
+```
+   class CustomClock : public Sensor {
+       public:
+       CustomClock() : Sensor("customClock") {setDisplayName("Custom Clock");}
+       CustomClock( const char* target ) : Sensor(target) {setDisplayName("Custom Clock");}
+       virtual ~CustomClock() {}
+```
+
+The <i>CustomClock</i> class derives from <i>Sensor</i> and uses a [SystemClock](https://github.com/dltoth/SystemClock/blob/main/src/SystemClock.h) as a timepiece
+
+```
+    protected:
+
+      SystemClock     _sysClock;  
+
+```
+
+It requires definition of the following virtual functions:
+
+```
+    void   setup(WebContext* svr)                   { Sensor::setup(svr);_sysClock.updateSysTime();}
+    void   doDevice()                               {_sysClock.doDevice();}
+```
+
+The <i>setup()</i> function calls <i>setup()</i> on the base class and starts the <i>SystemClock</i>, and <i>doDevice()</i> does a unit of work for the clock.
+
+Sensor display is governed by implementation of the virtual methods:
 
 ```
     int formatContent(char buffer[], int size, int pos);       // Format content as displayed at the device target, return updated write position
@@ -86,21 +209,17 @@ Sensor and Control display are governed by implementation of the methods
 
 ```
 
-In RootDevice display, ``formatRootContent(...)`` is called to provide HTML for an iFrame for a Control, or a single line of HTML for a Sensor reading. In UPnPDevice display, the method `formatContent(...)` is called to provide HTML for the device display.
+In <i>RootDevice</i> display, ``formatRootContent(...)`` is called to provide HTML for an iFrame for <i>Control</i>, or a single line of HTML for a <i>Sensor</i> reading. In <i>UPnPDevice</i> display, the method `formatContent(...)` is called to provide HTML for the device display.
 
-Now, select the <b><i>This Device</b></i> button.
 
-*Figure 2 - RelayControl display at http://device-IP:80/device*
+## Creating a Custom Control
 
-![image2](./assets/image2.png)
+## Creating a UPnPService
 
-In general, RootDevice will display at <i>http://device-IP:80/root-target</i>, in this case <i>root-target</i> has been set to <i>device</i>. Display for a RootDevice consists of a button for each embedded device in the order they were added, and a <i>Configure</i> button. In this example there are buttons for ``RelayControl`` and ``SoftwareClock``, each labeled with their display name. Selecting either will bring up the display for the specific device, and selecting <i>Configure</i> will bring up the RootDevice configuration page.
+## Adding Configuration
 
-Now, select the <b><i>Software Clock</i></b> button.
 
-*Figure 3 - RelayControl display at http://device-IP:80/device/clock*
 
-![image3](./assets/image3.png)
 
 
 
