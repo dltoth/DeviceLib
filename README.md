@@ -120,7 +120,7 @@ Now, flash an ESP device with the sketch above, start it up and point a browser 
 
 As discussed, device display is in the order that devices were added to the <i>RootDevice</i> with <i>RelayControl</i> at the top of the page and <i>SoftwareClock</i> below that. <i>RelayControl</i> consists of a toggle and text and is displayed in an iFrame, and <i>SoftwareClock</i> displays date/time in a single line of HTML.
 
-Selecting the <b><i>This Device</b></i> button displays all of the <i>RootDevice</i> embedded devices as selectable buttons in the order they were added, the same as the page displayed at *http\//device-IP:80/device*.
+Selecting the <b><i>This Device</b></i> button displays all of the <i>RootDevice</i> embedded devices as selectable buttons in the order they were added, the same as the page displayed at *http\://device-IP:80/device*.
 
 *Figure 2 - RootDevice display at http\://device-IP:80/device*
 
