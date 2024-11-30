@@ -116,7 +116,7 @@ Now, flash an ESP device with the sketch above, start it up and point a browser 
 
 *Figure 1 - RootDevice display at http://device-IP:80*
 
-![image1](./assets/image1.png)
+![image01](./assets/image01.png)
 
 As discussed, device display is in the order that devices were added to the <i>RootDevice</i> with <i>RelayControl</i> at the top of the page and <i>SoftwareClock</i> below that. <i>RelayControl</i> consists of a toggle and text and is displayed in an iFrame, and <i>SoftwareClock</i> displays date/time in a single line of HTML.
 
@@ -448,9 +448,9 @@ Note the following:
 
 Replacing *ClockDevice* with *ClockWithConfig* in [CustomSensor](https://github.com/dltoth/DeviceLib/blob/main/examples/CustomSensor/CustomSensor.ino) will yield a clock device with a configuration page allowing timezone input. The configuration page is shown below.
 
-*Figure 5 - Configuration page display at http://device-IP:80/root/clock/setConfiguration/configForm*
+*Figure 6 - Configuration page display at http://device-IP:80/root/clock/setConfiguration/configForm*
 
-![image5](./assets/image5.png)
+![image6](./assets/image6.png)
 
 **Important Note:** The target URL for *SetConfiguration* is configurable, with `c.setConfigurationSvc()->setTarget(const char *target)` where `c` is a *ClockDevice*, but the configuration form target is not, and hard coded to "configForm".
 
@@ -602,9 +602,11 @@ Implementation of `setState(WebContext* svr)` examines the query argument named 
 
 Lastly, an implementation for `setup(WebContext* svr)` is required to register the HTTP request handler `setState()` on the target URL *http://device-IP:80/root/toggle/setState*. Device display is shown below.
 
-*Figure 6 - CustomControl display at http://device-IP:80*
+*Figure 7 - CustomControl display at http://device-IP:80*
 
-![image6](./assets/image6.png)
+![image7](./assets/image7.png)
+
+
 
 
 
