@@ -53,14 +53,13 @@ namespace lsc {
  *    1. void configForm(WebConext*) - for displaying a configuration form 
  *    2. void setControlConfigutation(WebContext*) - for responding to configuration form submission 
  *    3. void getControlConfiguration(WebContext*) - for responding to requests for configuration
- *    4. void content(char buffer[], int size) - to supply display content
+ *    4. int  formatContent(char buffer[], int size, int pos); - to supply display content
  *    5. ControlState sensorState() - for providing ControlState based on Sensor reading
  *
- *  Note that the content() method should also rely on SensorControlledRelay::content() to supply the standard toggles,
+ *  Note that the formatContent() method should also rely on SensorControlledRelay::formatContent() to supply the standard toggles,
  *  state management, and mode management. Something like:
  *     void  MyControl::content(char buffer[], int size) {  
- *              SensorControlledRelay::content(buffer,size);
- *              int pos = strlen(buffer); 
+ *              int pos = SensorControlledRelay::formatContent(buffer,size);
  *              pos = formatBuffer_P(buffer,size,pos,...); 
  *              ...         
  *     } 
@@ -85,7 +84,7 @@ class SensorControlledRelay : public RelayControl {
       const char*     controlMode()                 {return((isAUTOMATIC())?("AUTOMATIC"):("MANUAL"));}   // Returns char* representation of ControlMode
 
 /**
- *    Sensor refresh rate
+ *    Sensor refresh rate (polling interval)
  */
       int             sensorRefresh()               {return _timer.setPointMillis()/1000;}
       void            sensorRefresh(int secs)       {if( secs > 0 ) _timer.set(secs*1000);}

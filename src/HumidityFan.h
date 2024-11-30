@@ -45,7 +45,7 @@ namespace lsc {
  *    1. void configForm(WebConext*) - for displaying a configuration form 
  *    2. void setOutletTimerConfigutation(WebContext*) - for responding to configuration form submission 
  *    3. void getOutletTimerConfiguration(WebContext*) - for responding to requests for configuration
- *    4. void content(char buffer[], int size) - to supply display content
+ *    4. int  formatContent(char buffer[], int size, int pos); - to supply display content
  *    5. ControlState sensorState() - for providing ControlState based on Sensor reading
  */ 
 

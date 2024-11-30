@@ -43,7 +43,7 @@ namespace lsc {
  *    1. void configForm(WebConext*) - for displaying a configuration form 
  *    2. void setOutletTimerConfigutation(WebContext*) - for responding to configuration form submission 
  *    3. void getOutletTimerConfiguration(WebContext*) - for responding to requests for configuration
- *    4. void content(char buffer[], int size) - to supply display content
+ *    4. void formatContent(char buffer[], int size, int pos) - to supply display content
  *    5. ControlState sensorState() - for providing ControlState based on Sensor reading
  */ 
 
@@ -57,8 +57,7 @@ class OutletTimer : public SensorControlledRelay {
       const char*     nextOn();              // Return time (as char*) of next ON cycle
 
 /**
- *    SensorControlledRelay will poll for Sensor state every 5 secs by default, which should not
- *    overwhelm the Thermometer.
+ *    SensorControlledRelay will poll for Sensor state every 5 secs by default
  */
       virtual ControlState  sensorState();
 
