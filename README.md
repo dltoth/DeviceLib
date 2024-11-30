@@ -600,12 +600,17 @@ First note that display for the toggle is governed by HTML initialized in the ar
 
 Implementation of `setState(WebContext* svr)` examines the query argument named **STATE**, calls the overloaded `setState(ControlState flag)` method, and then redisplays the *Control* calling `display(WebContext* svr)`, which sets up the iFrame that ultimately leads to `formatContent(...)` being called, formatting HTML with either `relay_on` or `rel;ay_off` depending on **STATE**
 
-Lastly, an implementation for `setup(WebContext* svr)` is required to register the HTTP request handler `setState()` on the target URL http\://device-IP:80/root/toggle/setState<code>. Device display is shown below.
+Lastly, an implementation for `setup(WebContext* svr)` is required to register the HTTP request handler `setState()` on the target URL http\://device-IP:80/root/toggle/setState. Device display is shown below.
 
 *Figure 7 - CustomControl display at http\://device-IP:80*
 
 ![image7](./assets/image7.png)
 
+## Further Exploration ##
+
+It's common in an Arduino project for one device to control another one, for example a [SoftwareClock](https://github.com/dltoth/DeviceLib/blob/main/src/SoftwareClock.h) or [Thermometer](https://github.com/dltoth/DeviceLib/blob/main/src/Thermometer.h) to control a [Relay](https://github.com/dltoth/DeviceLib/blob/main/src/RelayControl.h). The virtual base class [SensorControlledRelay](https://github.com/dltoth/DeviceLib/blob/main/src/SensorControlledRelay.h) is intended to provide a basis for that. 
+
+Extending *SensorControlledRelay* goes beyond the scope of this document, but see [OutletTimer](https://github.com/dltoth/DeviceLib/blob/main/src/OutletTimer.h) and [HumidityFan](https://github.com/dltoth/DeviceLib/blob/main/src/HumidityFan.h) as examples.
 
 
 
