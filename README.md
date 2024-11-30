@@ -114,7 +114,7 @@ The call ``root.doDevice()`` handles any workload intented for the *RootDevice* 
 
 Now, flash an ESP device with the sketch above, start it up and point a browser to the device IP address. 
 
-<i>Figure 1 - RootDevice display at </i> <code>http://device-IP:80</code>
+*Figure 1 - RootDevice display at http\://device-IP:80*
 
 ![image1](./assets/image1.png)
 
