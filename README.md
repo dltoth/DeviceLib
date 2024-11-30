@@ -114,23 +114,23 @@ The call ``root.doDevice()`` handles any workload intented for the *RootDevice* 
 
 Now, flash an ESP device with the sketch above, start it up and point a browser to the device IP address. 
 
-*Figure 1 - RootDevice display at http://device-IP:80*
+<i>Figure 1 - RootDevice display at </i> <code>http://device-IP:80</code>
 
 ![image1](./assets/image1.png)
 
 As discussed, device display is in the order that devices were added to the <i>RootDevice</i> with <i>RelayControl</i> at the top of the page and <i>SoftwareClock</i> below that. <i>RelayControl</i> consists of a toggle and text and is displayed in an iFrame, and <i>SoftwareClock</i> displays date/time in a single line of HTML.
 
-Selecting the <b><i>This Device</b></i> button displays all of the <i>RootDevice</i> embedded devices as selectable buttons in the order they were added, the same as the page displayed at <i>http://device-IP:80/device</i>.
+Selecting the <b><i>This Device</b></i> button displays all of the <i>RootDevice</i> embedded devices as selectable buttons in the order they were added, the same as the page displayed at <code>http://device-IP:80/device</code>.
 
-*Figure 2 - RootDevice display at http://device-IP:80/device*
+*Figure 2 - RootDevice display at* <code>http://device-IP:80/device</code>
 
 ![image2](./assets/image2.png)
 
-So a <i>RootDevice</i> displays its embedded devices at <i>http://device-IP:80/root-target</i>, as a list of buttons, one for each embedded device in the order they were added, along with a <i>Configure</i> button. In this example there are buttons for ``RelayControl`` and ``SoftwareClock``, each labeled with their display name. Selecting either will bring up the display for the specific device, and selecting <i>Configure</i> will bring up the <i>RootDevice</i> configuration page. Embedded devices are displayed at <i>http://device-IP:80/root-target/device-target</i>.
+So a <i>RootDevice</i> displays its embedded devices at <code>http://device-IP:80/root-target</code>, as a list of buttons, one for each embedded device in the order they were added, along with a <i>Configure</i> button. In this example there are buttons for ``RelayControl`` and ``SoftwareClock``, each labeled with their display name. Selecting either will bring up the display for the specific device, and selecting <i>Configure</i> will bring up the <i>RootDevice</i> configuration page. Embedded devices are displayed at <code>http://device-IP:80/root-target/device-target</code>.
 
 Now, select the <b><i>Software Clock</i></b> button.
 
-*Figure 3 - RootDevice display at http://device-IP:80/device/clock*
+*Figure 3 - RootDevice display at* <code>http://device-IP:80/device/clock</code>
 
 ![image3](./assets/image3.png)
 
@@ -140,7 +140,7 @@ Now, select the <b><i>Software Clock</i></b> button.
   SoftwareClock::setTarget(const char*)
 ```
 
-Also, note the difference between <i>SoftwareClock</i> display at <i>http://device-IP:80</i>, where display consists of a single line of HTML, and <i>SoftwareClock</i> display at <i>http://device-IP:80/device/clock</i> where display consists of multiple lines of HTML. That difference is driven by implementation of the ``formatContent(...)`` and ``formatRootContent(...)`` methods as discussed in [Custom Sensors and Controls](#custom-sensors-and-controls) below.
+Also, note the difference between <i>SoftwareClock</i> display at <code>http://device-IP:80</code>, where display consists of a single line of HTML, and <i>SoftwareClock</i> display at <code>http://device-IP:80/device/clock</code> where display consists of multiple lines of HTML. That difference is driven by implementation of the ``formatContent(...)`` and ``formatRootContent(...)`` methods as discussed in [Custom Sensors and Controls](#custom-sensors-and-controls) below.
 
 Lastly, notice the Serial monitor output:
 
@@ -334,13 +334,13 @@ Implementation for `setup(...)` calls `Sensor::setup(...)` first to assure prope
 
 See the boilerplate sketch [CustomSensor](https://github.com/dltoth/DeviceLib/blob/main/examples/CustomSensor/CustomSensor.ino) that implents *ClockDevice*; device display at the root URL is shown below. 
 
-*Figure 4 - Device display at http://device-IP:80*
+*Figure 4 - Device display at* <code>http://device-IP:80</code>
 
 ![image4](./assets/image4.png)
 
 Clicking through to the *ClockDevice* target, display is shown below.
 
-*Figure 5 - Device display at http://device-IP:80/root/clock*
+*Figure 5 - Device display at* <code>http://device-IP:80/root/clock</code>
 
 ![image5](./assets/image5.png)
 
@@ -448,7 +448,7 @@ Note the following:
 
 Replacing *ClockDevice* with *ClockWithConfig* in [CustomSensor](https://github.com/dltoth/DeviceLib/blob/main/examples/CustomSensor/CustomSensor.ino) will yield a clock device with a configuration page allowing timezone input. The configuration page is shown below.
 
-*Figure 6 - Configuration page display at http://device-IP:80/root/clock/setConfiguration/configForm*
+*Figure 6 - Configuration page display at* <code>http://device-IP:80/root/clock/setConfiguration/configForm</code>
 
 ![image6](./assets/image6.png)
 
@@ -600,9 +600,9 @@ First note that display for the toggle is governed by HTML initialized in the ar
 
 Implementation of `setState(WebContext* svr)` examines the query argument named **STATE**, calls the overloaded `setState(ControlState flag)` method, and then redisplays the *Control* calling `display(WebContext* svr)`, which sets up the iFrame that ultimately leads to `formatContent(...)` being called, formatting HTML with either `relay_on` or `rel;ay_off` depending on **STATE**
 
-Lastly, an implementation for `setup(WebContext* svr)` is required to register the HTTP request handler `setState()` on the target URL *http://device-IP:80/root/toggle/setState*. Device display is shown below.
+Lastly, an implementation for `setup(WebContext* svr)` is required to register the HTTP request handler `setState()` on the target URL <code>http://device-IP:80/root/toggle/setState<code>. Device display is shown below.
 
-*Figure 7 - CustomControl display at http://device-IP:80*
+*Figure 7 - CustomControl display at* <code>http://device-IP:80</code>
 
 ![image7](./assets/image7.png)
 
