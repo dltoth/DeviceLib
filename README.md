@@ -116,7 +116,7 @@ Now, flash an ESP device with the sketch above, start it up and point a browser 
 
 *Figure 1 - RootDevice display at http://device-IP:80*
 
-![image01](./assets/image01.png)
+![image1](./assets/image1.png)
 
 As discussed, device display is in the order that devices were added to the <i>RootDevice</i> with <i>RelayControl</i> at the top of the page and <i>SoftwareClock</i> below that. <i>RelayControl</i> consists of a toggle and text and is displayed in an iFrame, and <i>SoftwareClock</i> displays date/time in a single line of HTML.
 
