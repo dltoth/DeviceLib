@@ -22,8 +22,8 @@
 
 #include "ClockWithConfig.h"
 
-#define AP_SSID "Dumbledore 2.0"
-#define AP_PSK  "2badboys"
+#define AP_SSID "My_SSID"
+#define AP_PSK  "My_PSK"
 #define SERVER_PORT 80
 
 #ifdef ESP8266
