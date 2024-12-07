@@ -23,7 +23,7 @@
 #ifndef EXTENDED_DEVICE_H
 #define EXTENDED_DEVICE_H
 
-#include <WiFiPortal.h>
+// #include <WiFiPortal.h>
 #include <WiFiUdp.h>
 #include <UPnPLib.h>
 #include "ConfigurationServices.h"
@@ -34,7 +34,9 @@
 namespace lsc {
   
 /** ExtendedDevice is a Configurable RootDevice that provides SSDP Search capability for UPnPDevices on the
- *  same local network. Default configuration for ExtendedDevice allows for getting and setting display name, and resetting 
+ *  same local network. Default configuration for ExtendedDevice allows for getting and setting display name.
+ *
+ *  and resetting 
  *  the Access Point. This behavior can be overridden via the setHttpHandler method of the SetConfigurationSvc() 
  *  UPnPService. AccessPoint reset depends on use of the WiFiPortal library.
  *  
@@ -45,10 +47,6 @@ class ExtendedDevice : public RootDevice {
       ExtendedDevice();
       ExtendedDevice( const char* target );
       virtual ~ExtendedDevice() {}
-
-
-      void               resetAP(WebContext* svr);
-      void               clearAP(WebContext* svr);
 
 /**
  *    Virtual display and setup

@@ -32,19 +32,14 @@ const char SSDP_Search[]                  PROGMEM = "M-SEARCH * HTTP/1.1\r\n"
                                                     "USER-AGENT: ESP8266 UPnP/1.1 LSC-SSDP/1.0\r\n\r\n";
 const char LocationHeader[]               PROGMEM = "LOCATION";
 const char nearby_title[]                 PROGMEM = "<H1 align=\"center\"> Devices Near %s </H1><br><br>";
+
 const char ExtendedDevice_config_form[]      PROGMEM = "<form action=\"%s\"><div align=\"center\">"                                                      // Form Path
          "<label for=\"displayName\">Device Name &nbsp &nbsp</label>"
          "<input type=\"text\" placeholder=\"%s\" name=\"displayName\"><br><br><br>"                                                                     // DisplayName
-         "<button class=\"fmButton\" type=\"button\" style=\"width:12em\" onclick=\"window.location.href=\'%s\';\">Reset Access Point</button><br><br>"  // Reset AP path
          "<button class=\"fmButton\" type=\"submit\">Submit</button>&nbsp&nbsp"
          "<button class=\"fmButton\" type=\"button\" onclick=\"window.location.href=\'%s\';\">Cancel</button>"                                           // Cancel path
       "</div></form><br><br>";
-const char ExtendedDevice_resetAP[]          PROGMEM = "<h3 align=\"center\"> Select OK to clear network credentials for %s </h3>"                       // ssid
-                                                    "<h4 align=\"center\">Access Point can be reset on next device power cycle </h4><br><br>"
-                                          "<div align=\"center\">"
-                                             "<a href=\"%s\" class=\"small apButton\">OK</a>&nbsp&nbsp"                                                  // Clear credentials path
-                                             "<a href=\"%s\" class=\"small apButton\">Cancel</a>"                                                        // Cancel path
-                                          "</div></body></html>";
+
 const char brk_html[]                   PROGMEM = "<br>";   
 #define SSDP_BUFFER_SIZE 1000
 #define DESC_HEADER_SIZE 150
@@ -52,7 +47,7 @@ const char brk_html[]                   PROGMEM = "<br>";
 /**
  *  Static RTT initialization
  */
- INITIALIZE_DEVICE_TYPES(ExtendedDevice,LeelanauSoftware-com,ExtendedDevice,1.0.0);
+ INITIALIZE_DEVICE_TYPES(ExtendedDevice,LeelanauSoftware-com,ExtendedDevice,1.0.1);
 
 ExtendedDevice::ExtendedDevice() : RootDevice("root") {
   addServices(getConfigurationSvc(),setConfigurationSvc());   // Add services for configuration
@@ -177,13 +172,11 @@ void ExtendedDevice::configForm(WebContext* svr) {
 /**
  *  Config Form Content
  */
-  char resetAPPath[100];
-  handlerPath(resetAPPath,100,"resetAP");
   char pathBuff[100];
   getPath(pathBuff,100);
   char svcPath[100];
   setConfigurationSvc()->getPath(svcPath,100);
-  pos = formatBuffer_P(buffer,size,pos,ExtendedDevice_config_form,svcPath,getDisplayName(),resetAPPath,pathBuff);
+  pos = formatBuffer_P(buffer,size,pos,ExtendedDevice_config_form,svcPath,getDisplayName(),pathBuff);
 
 /**
  *  Config Form HTML Tail
@@ -192,55 +185,12 @@ void ExtendedDevice::configForm(WebContext* svr) {
   svr->send(200,"text/html",buffer);   
 }
 
-/**
- *   Reset portal to force portal start on next boot cycle, rather than using stored credentials.
- */
-void ExtendedDevice::clearAP(WebContext *svr) {
-  WiFiPortal::resetCredentials();
-  configForm(svr);
-}
-
-void ExtendedDevice::resetAP(WebContext *svr) {
-  char buffer[1500];
-  int size = sizeof(buffer);
-  
-/**
- *    Config Form HTML Start with Title
- */
-  char title[50];
-  snprintf(title,50,"Reset Access Point for %s?",getDisplayName());
-  int pos = formatHeader(buffer,size,title);
-
-/**
- *  Reset AP Form Content
- *  OK Button calls clearAP()
- *  CANCEL Button returns to the Config Form
- */
-  char clearAPPath[100];
-  handlerPath(clearAPPath,100,"clearAP");
-  char svcPath[100];
-  setConfigurationSvc()->getPath(svcPath,100);
-  String ssid = WiFi.SSID();
-  pos = formatBuffer_P(buffer,size,pos,ExtendedDevice_resetAP,ssid.c_str(),clearAPPath,svcPath);
-
-/**
- *  Config Form HTML Tail
- */
-  formatTail(buffer,size,pos);
-  svr->send(200,"text/html",buffer);
-}
-
 void ExtendedDevice::setup(WebContext* svr) {
   RootDevice::setup(svr);
   char pathBuffer[100];  
   handlerPath(pathBuffer,100,"nearbyDevices");
   svr->on(pathBuffer,[this](WebContext* svr){this->nearbyDevices(svr);});
   pathBuffer[0] = '\0';
-  handlerPath(pathBuffer,100,"resetAP");
-  svr->on(pathBuffer,[this](WebContext* svr){this->resetAP(svr);});
-  pathBuffer[0] = '\0';
-  handlerPath(pathBuffer,100,"clearAP");
-  svr->on(pathBuffer,[this](WebContext* svr){this->clearAP(svr);});
 }
 
 } // End of namespace lsc
