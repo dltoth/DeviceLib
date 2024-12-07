@@ -1,10 +1,10 @@
 # DeviceLib
-DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPLib) for ESP8266 and ESP32, based on the [UPnP 1.1 Device Architecture](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf). Use of this library requires the companion libraries [CommonUtil](https://github.com/dltoth/CommonUtil) for user interface, [UPnPLib](https://github.com/dltoth/UPnPLib) for device architecture and service discovery, [SystemClock](https://github.com/dltoth/SystemClock) for NTP synchronized time, and [WiFiPortal](https://github.com/dltoth/WiFiPortal) for access point configuration. 
+DeviceLib is a library of turn-key [UPnPDevices](https://github.com/dltoth/UPnPLib) for ESP8266 and ESP32, based on the [UPnP 1.1 Device Architecture](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf). Use of this library requires the companion libraries [CommonUtil](https://github.com/dltoth/CommonUtil) for user interface, [UPnPLib](https://github.com/dltoth/UPnPLib) for device architecture and service discovery, and [SystemClock](https://github.com/dltoth/SystemClock) for NTP synchronized time.
 
 DeviceLib includes the following classes:
 
 ```
-   ExtendedDevice         := An extended RootDevice that includes ssdp search to find nearby devices and configuration that includes access point reset
+   ExtendedDevice         := An extended RootDevice that includes ssdp search to find nearby devices and device name configuration
    HubDevice              := An ExtendedDevice that displays all RootDevices on a local network. With HubDevice, only one mDNS name is necessary, all 
                              other devices can be accessed via the HubDevice portal interface
    Sensor                 := A configurable UPnPDevice base class providing Sensor reading as simple HTML and Sensor configuration through ConfigurationServices
